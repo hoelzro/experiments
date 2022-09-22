@@ -1,0 +1,61 @@
+// we got the CPU - make a note of what time it is so that we can later
+// see how long we get to run for
+tracepoint:sched:sched_switch /args->next_pid==$1/ {
+  @scheduled_start_nsecs = nsecs;
+}
+
+// we lost the CPU - make a note of how long it's been since we first got
+// it and add that to our running total
+tracepoint:sched:sched_switch /args->prev_pid==$1/ {
+  if(@scheduled_start_nsecs != 0) {
+    @cpu_time = @cpu_time + (nsecs - @scheduled_start_nsecs);
+  }
+}
+
+// we entered a syscall - make a note of the time so we can track how long
+// the syscall takes
+tracepoint:raw_syscalls:sys_enter /pid==$1/ {
+  @syscall_start = nsecs;
+}
+
+// we exited a syscall - record the difference for later
+tracepoint:raw_syscalls:sys_exit /pid==$1/ {
+  if(@syscall_start != 0) {
+    $syscall_duration = (nsecs - @syscall_start) / 1000;
+    @syscall_times[args->id] = @syscall_times[args->id] + $syscall_duration;
+  }
+}
+
+BEGIN {
+  @previous_loop_time = nsecs;
+}
+
+// track calls to g_main_context_prepare, which is a *pretty* good proxy for
+// running one iteration of the event loop
+uprobe:/usr/lib/libglib-2.0.so.0.7200.3:g_main_context_prepare /pid==$1/ {
+  $t = nsecs;
+  $dt = ($t - @previous_loop_time) / 1000;
+  @previous_loop_time = $t;
+
+  // if it's taken more than 3 seconds since the last time the loop…looped,
+  // dump stats
+  if($dt > 3000000) {
+    printf("It's been %d microseconds since the previous loop\n", $dt);
+    printf("Time spent in syscalls:\n");
+    print(@syscall_times);
+    printf("\nTime spent scheduled on the CPU:\n");
+    printf("  %d μs\n\n", @cpu_time / 1000);
+  }
+
+  // reset our tracking variables for next time
+  @cpu_time = 0;
+  clear(@syscall_times);
+}
+
+END {
+  clear(@cpu_time);
+  clear(@previous_loop_time);
+  clear(@syscall_start);
+  clear(@scheduled_start_nsecs);
+  clear(@syscall_times);
+}
