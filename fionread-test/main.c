@@ -1,9 +1,9 @@
 #include <errno.h>
 #include <fcntl.h>
-#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/epoll.h>
 #include <sys/ioctl.h>
 
 #define die(fmt, args...)\
@@ -11,25 +11,18 @@
     exit(1);
 
 static char *
-describe_poll_revents(int revents)
+describe_epoll_events(uint32_t events)
 {
     char buffer[128] = {'\0'};
 
 #define EVENT(mask)\
-    if(revents & mask) {\
-        strcat(buffer, #mask "|");\
-    }
-
-    EVENT(POLLIN);
-    EVENT(POLLRDNORM);
-    EVENT(POLLRDBAND);
-    EVENT(POLLPRI);
-    EVENT(POLLOUT);
-    EVENT(POLLWRBAND);
-    EVENT(POLLERR);
-    EVENT(POLLHUP);
-    EVENT(POLLNVAL);
-
+    if(events & mask) strcat(buffer, #mask "|")
+    EVENT(EPOLLIN);
+    EVENT(EPOLLOUT);
+    EVENT(EPOLLRDHUP);
+    EVENT(EPOLLPRI);
+    EVENT(EPOLLERR);
+    EVENT(EPOLLHUP);
 #undef EVENT
 
     if(strlen(buffer)) {
@@ -45,7 +38,8 @@ main(int argc, char **argv)
     int status;
     int input_buffer_size;
     const char *target = argv[1];
-    struct pollfd pollfds[1];
+    int epoll_fd;
+    struct epoll_event event;
     char *poll_description = NULL;
 
     fd = open(target, O_RDONLY);
@@ -53,16 +47,26 @@ main(int argc, char **argv)
         die("Unable to open TTY %s: %s", target, strerror(errno));
     }
 
-    pollfds[0].fd = fd;
-    pollfds[0].events = POLLIN | POLLRDNORM | POLLRDBAND | POLLPRI | /*POLLOUT | POLLWRBAND |*/ POLLERR | POLLHUP;
+    epoll_fd = epoll_create(1);
+    if(epoll_fd < 0) {
+        die("Unable to create epoll FD: %s", strerror(errno));
+    }
+
+    event.events = EPOLLIN | EPOLLRDHUP | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLET;
+    event.data.fd = 0;
+
+    status = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &event);
+    if(status < 0) {
+        die("Unable to set up FD for polling: %s", strerror(errno));
+    }
 
     while(1) {
-        status = poll(pollfds, 1, -1);
+        status = epoll_wait(epoll_fd, &event, 1, -1);
         if(status < 0) {
             die("Unable to poll TTY: %s", strerror(errno));
         }
 
-        poll_description = describe_poll_revents(pollfds[0].revents);
+        poll_description = describe_epoll_events(event.events);
         printf("got activity for TTY: %s\n", poll_description);
         free(poll_description);
 
@@ -72,5 +76,6 @@ main(int argc, char **argv)
         }
         printf("input buffer size: %d\n", input_buffer_size);
     }
+
     return 0;
 }
