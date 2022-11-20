@@ -59,6 +59,10 @@
         pauseTimer() {
           clearInterval(this.interval);
           this.interval = null;
+
+          this.setState({
+            state: 'paused',
+          });
         }
 
         handleStartPause() {
