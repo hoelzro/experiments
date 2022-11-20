@@ -1,6 +1,24 @@
 <html>
   <head>
     <title>React Test</title>
+    <style type='text/css'>
+      /* shamelessly adapted from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/blink */
+      .blink {
+        animation: 1s linear infinite condemned_blink_effect;
+      }
+
+      @keyframes condemned_blink_effect {
+        0% {
+          visibility: hidden;
+        }
+        50% {
+          visibility: hidden;
+        }
+        100% {
+          visibility: visible;
+        }
+      }
+    </style>
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script type='text/javascript' src='https://unpkg.com/babel-standalone@6/babel.min.js'>
@@ -121,9 +139,9 @@
               case 'running':
                 return <p>Countdown: {formatSecondsRemaining(this.state.secondsRemaining)}</p>;
               case 'paused':
-                return <p>Countdown: Paused</p>;
+                return <p>Countdown: <span className='blink'>{formatSecondsRemaining(this.state.secondsRemaining)}</span></p>;
               case 'firing':
-                return <p>Countdown: Firing</p>;
+                return <p>Countdown: <span className='blink'>{formatSecondsRemaining(this.state.secondsRemaining)}</span></p>;
             }
           };
 
