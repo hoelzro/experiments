@@ -145,19 +145,19 @@
           let Timer = () => {
             switch(this.state.state) {
               case 'stopped':
-                return <p>Countdown: </p>;
+                return null;
               case 'running':
-                return <p>Countdown: {formatSecondsRemaining(this.state.secondsRemaining)}</p>;
+                return formatSecondsRemaining(this.state.secondsRemaining);
               case 'paused':
-                return <p>Countdown: <span className='blink'>{formatSecondsRemaining(this.state.secondsRemaining)}</span></p>;
+                return <span className='blink'>{formatSecondsRemaining(this.state.secondsRemaining)}</span>;
               case 'firing':
-                return <p>Countdown: <span className='blink'>{formatSecondsRemaining(this.state.secondsRemaining)}</span></p>;
+                return <span className='blink'>{formatSecondsRemaining(this.state.secondsRemaining)}</span>;
             }
           };
 
           return (
             <div>
-              <Timer />
+              <p>Countdown: <Timer /></p>
               <form onSubmit={handleSubmit}>
                 <label htmlFor='countdown_seconds'>Countdown time:</label>
                 <input type='number' name='countdown_seconds' onInput={this.handleCountdownSecondsChanged.bind(this)} />
