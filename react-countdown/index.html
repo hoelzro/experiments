@@ -25,7 +25,13 @@
     </script>
     <script type='text/babel'>
       function formatSecondsRemaining(seconds) {
-        return seconds + 's';
+        let hours = Math.floor(seconds / 3600);
+        seconds %= 3600;
+
+        let minutes = Math.floor(seconds / 60);
+        seconds %= 60;
+
+        return [ hours, minutes, seconds ].map(value => value.toString().padStart(2, '0')).join(':');
       };
 
       class Countdown extends React.Component {
