@@ -9,14 +9,24 @@
       class Countdown extends React.Component {
         constructor(props) {
           super(props);
+          this.state = {
+            secondsRemaining: 0,
+            secondsTotal: null,
+          };
+        }
+
+        handleCountdownSecondsChanged(e) {
+          this.setState({
+            secondsTotal: parseInt(e.target.value),
+          });
         }
 
         handleStartPause() {
-          console.log('clicked start/pause');
+          console.log('clicked start/pause', this.state);
         }
 
         handleStop() {
-          console.log('clicked stop');
+          console.log('clicked stop', this.state);
         }
 
         render() {
@@ -29,7 +39,7 @@
               <p>Countdown: </p>
               <form onSubmit={handleSubmit}>
                 <label htmlFor='countdown_seconds'></label>
-                <input type='number' name='countdown_seconds' />
+                <input type='number' name='countdown_seconds' onInput={this.handleCountdownSecondsChanged.bind(this)} />
 
                 <br />
 
