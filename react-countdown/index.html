@@ -6,13 +6,19 @@
     <script type='text/javascript' src='https://unpkg.com/babel-standalone@6/babel.min.js'>
     </script>
     <script type='text/babel'>
-      function Greet(props) {
-        return <p>Hello, {props.name}!</p>;
+      class Countdown extends React.Component {
+        constructor(props) {
+          super(props);
+        }
+
+        render() {
+          return <p>This is a countdown</p>;
+        }
       }
 
       function go() {
         let root = ReactDOM.createRoot(document.getElementById('react-root'));
-        root.render(<Greet name="Rob"/>);
+        root.render(<Countdown />);
       }
     </script>
   </head>
