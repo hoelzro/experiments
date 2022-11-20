@@ -11,18 +11,30 @@
           super(props);
         }
 
+        handleStartPause() {
+          console.log('clicked start/pause');
+        }
+
+        handleStop() {
+          console.log('clicked stop');
+        }
+
         render() {
+          function handleSubmit(e) {
+            e.preventDefault();
+          }
+
           return (
             <div>
               <p>Countdown: </p>
-              <form>
+              <form onSubmit={handleSubmit}>
                 <label htmlFor='countdown_seconds'></label>
                 <input type='number' name='countdown_seconds' />
 
                 <br />
 
-                <button>Start/Pause</button>
-                <button>Stop</button>
+                <button onClick={this.handleStartPause.bind(this)}>Start/Pause</button>
+                <button onClick={this.handleStop.bind(this)}>Stop</button>
               </form>
             </div>
           );
