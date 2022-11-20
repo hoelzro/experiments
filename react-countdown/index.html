@@ -6,6 +6,10 @@
     <script type='text/javascript' src='https://unpkg.com/babel-standalone@6/babel.min.js'>
     </script>
     <script type='text/babel'>
+      function formatSecondsRemaining(seconds) {
+        return seconds + 's';
+      };
+
       class Countdown extends React.Component {
         constructor(props) {
           super(props);
@@ -106,9 +110,22 @@
             }
           };
 
+          let Timer = () => {
+            switch(this.state.state) {
+              case 'stopped':
+                return <p>Countdown: </p>;
+              case 'running':
+                return <p>Countdown: {formatSecondsRemaining(this.state.secondsRemaining)}</p>;
+              case 'paused':
+                return <p>Countdown: Paused</p>;
+              case 'firing':
+                return <p>Countdown: Firing</p>;
+            }
+          };
+
           return (
             <div>
-              <p>Countdown: </p>
+              <Timer />
               <form onSubmit={handleSubmit}>
                 <label htmlFor='countdown_seconds'></label>
                 <input type='number' name='countdown_seconds' onInput={this.handleCountdownSecondsChanged.bind(this)} />
