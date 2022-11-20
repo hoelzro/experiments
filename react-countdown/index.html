@@ -87,6 +87,25 @@
             e.preventDefault();
           }
 
+          let StartPauseButton = () => {
+            let isDisabled = this.state.secondsTotal == 0 || this.state.state == 'firing';
+
+            if(isDisabled) {
+              return <button disabled onClick={this.handleStartPause.bind(this)}>Start/Pause</button>
+            } else {
+              return <button onClick={this.handleStartPause.bind(this)}>Start/Pause</button>
+            }
+          };
+
+          let StopButton = () => {
+            let isDisabled = this.state.state == 'stopped';
+            if(isDisabled) {
+              return <button disabled onClick={this.handleStop.bind(this)}>Stop</button>
+            } else {
+              return <button onClick={this.handleStop.bind(this)}>Stop</button>
+            }
+          };
+
           return (
             <div>
               <p>Countdown: </p>
@@ -96,8 +115,8 @@
 
                 <br />
 
-                <button onClick={this.handleStartPause.bind(this)}>Start/Pause</button>
-                <button onClick={this.handleStop.bind(this)}>Stop</button>
+                <StartPauseButton />
+                <StopButton />
               </form>
             </div>
           );
