@@ -12,6 +12,20 @@
         }
 
         render() {
+          return (
+            <div>
+              <p>Countdown: </p>
+              <form>
+                <label htmlFor='countdown_seconds'></label>
+                <input type='number' name='countdown_seconds' />
+
+                <br />
+
+                <button>Start/Pause</button>
+                <button>Stop</button>
+              </form>
+            </div>
+          );
           return <p>This is a countdown</p>;
         }
       }
