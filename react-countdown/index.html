@@ -52,16 +52,20 @@
         }
 
         handleTick() {
-          if(this.state.secondsRemaining <= 0) {
+          // XXX is this the right way to go about this?
+          if(this.state.secondsRemaining <= 1) {
             this.pauseTimer();
-            this.setState({
-              state: 'firing',
-            });
-          } else {
-            this.setState((state, _) => ({
-              secondsRemaining: state.secondsRemaining - 1,
-            }));
           }
+
+          this.setState((state, _) => {
+            let secondsRemaining = state.secondsRemaining - 1;
+
+            if(secondsRemaining <= 0) {
+              return { secondsRemaining, state: 'firing' };
+            } else {
+              return { secondsRemaining };
+            }
+          });
         }
 
         startTimer() {
