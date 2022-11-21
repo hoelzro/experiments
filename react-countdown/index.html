@@ -93,19 +93,17 @@
           });
         }
 
-        handleStartPause() {
-          switch(this.state.state) {
-            case 'stopped':
+        // XXX this duplication of which state things can be in feels icky
+        handleStart() {
+          if(this.state.state == 'stopped') {
               this.startTimer();
-              break;
-            case 'paused':
+          } else { // 'paused'
               this.resumeTimer();
-              break;
-            case 'running':
-              this.pauseTimer();
-              break;
-            // otherwise (firing), do nothing
           }
+        }
+
+        handlePause() {
+          this.pauseTimer();
         }
 
         handleStop() {
@@ -123,14 +121,30 @@
             e.preventDefault();
           }
 
-          let StartPauseButton = () => {
-            let isDisabled = this.state.secondsTotal === null || this.state.state == 'firing';
+          let StartButton = () => {
+            let state = this.state.state;
+
+            if(state == 'running') {
+              return null;
+            }
+
+            let isDisabled = this.state.secondsTotal === null || state == 'firing';
 
             if(isDisabled) {
-              return <button disabled onClick={this.handleStartPause.bind(this)}>Start/Pause</button>
+              return <button disabled onClick={this.handleStart.bind(this)}>Start</button>;
             } else {
-              return <button onClick={this.handleStartPause.bind(this)}>Start/Pause</button>
+              return <button onClick={this.handleStart.bind(this)}>Start</button>;
             }
+          };
+
+          let PauseButton = () => {
+            let state = this.state.state;
+
+            if(state != 'running') {
+              return null;
+            }
+
+            return <button onClick={this.handlePause.bind(this)}>Pause</button>;
           };
 
           let StopButton = () => {
@@ -164,7 +178,8 @@
 
                 <br />
 
-                <StartPauseButton />
+                <StartButton />
+                <PauseButton />
                 <StopButton />
               </form>
             </div>
