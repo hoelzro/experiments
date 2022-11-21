@@ -173,9 +173,9 @@
             return (
               <span>
                 <label htmlFor='countdown_seconds'>Countdown time:</label>
-                <input type='number' name='countdown_seconds' onInput={this.handleCountdownSecondsChanged.bind(this)} value={this.state.secondsTotal} />
+                <input type='number' name='countdown_seconds' onInput={this.handleCountdownSecondsChanged.bind(this)} value={this.state.secondsTotal} disabled={this.state.state != 'stopped'}/>
               </span>
-            )
+            );
           };
 
           return (
