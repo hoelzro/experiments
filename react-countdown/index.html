@@ -124,7 +124,7 @@
           }
 
           let StartPauseButton = () => {
-            let isDisabled = this.state.secondsTotal == 0 || this.state.state == 'firing';
+            let isDisabled = this.state.secondsTotal === null || this.state.state == 'firing';
 
             if(isDisabled) {
               return <button disabled onClick={this.handleStartPause.bind(this)}>Start/Pause</button>
