@@ -129,12 +129,7 @@
             }
 
             let isDisabled = this.state.secondsTotal === null || state == 'firing';
-
-            if(isDisabled) {
-              return <button disabled onClick={this.handleStart.bind(this)}>Start</button>;
-            } else {
-              return <button onClick={this.handleStart.bind(this)}>Start</button>;
-            }
+            return <button disabled={isDisabled} onClick={this.handleStart.bind(this)}>Start</button>;
           };
 
           let PauseButton = () => {
@@ -149,11 +144,7 @@
 
           let StopButton = () => {
             let isDisabled = this.state.state == 'stopped';
-            if(isDisabled) {
-              return <button disabled onClick={this.handleStop.bind(this)}>Stop</button>
-            } else {
-              return <button onClick={this.handleStop.bind(this)}>Stop</button>
-            }
+            return <button disabled={isDisabled} onClick={this.handleStop.bind(this)}>Stop</button>
           };
 
           let Timer = () => {
