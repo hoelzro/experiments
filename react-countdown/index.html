@@ -34,6 +34,14 @@
         return [ hours, minutes, seconds ].map(value => value.toString().padStart(2, '0')).join(':');
       };
 
+      function RunningTimer(props) {
+        return formatSecondsRemaining(props.secondsRemaining);
+      }
+
+      function PausedTimer(props) {
+        return <span className='blink'>{formatSecondsRemaining(props.secondsRemaining)}</span>;
+      }
+
       class Countdown extends React.Component {
         constructor(props) {
           super(props);
@@ -147,18 +155,22 @@
             return <button disabled={isDisabled} onClick={this.handleStop.bind(this)}>Stop</button>
           };
 
-          let Timer = () => {
-            switch(this.state.state) {
-              case 'stopped':
-                return null;
-              case 'running':
-                return formatSecondsRemaining(this.state.secondsRemaining);
-              case 'paused':
-                return <span className='blink'>{formatSecondsRemaining(this.state.secondsRemaining)}</span>;
-              case 'firing':
-                return <span className='blink'>{formatSecondsRemaining(this.state.secondsRemaining)}</span>;
-            }
-          };
+          let timer;
+
+          switch(this.state.state) {
+            case 'stopped':
+              timer = null;
+              break;
+            case 'running':
+              timer = <RunningTimer secondsRemaining={this.state.secondsRemaining} />;
+              break;
+            case 'paused':
+              timer = <PausedTimer secondsRemaining={this.state.secondsRemaining} />;
+              break;
+            case 'firing':
+              timer = <PausedTimer secondsRemaining={0} />;
+              break;
+          }
 
           let CountdownInput = () => {
             return (
@@ -171,7 +183,7 @@
 
           return (
             <div>
-              <p>Countdown: <Timer /></p>
+              <p>Countdown: {timer}</p>
               <form onSubmit={handleSubmit}>
                 <CountdownInput />
 
