@@ -85,7 +85,6 @@
           super(props);
           this.state = {
             state: 'stopped',
-            deadline: null,
             secondsTotal: null,
           };
         }
@@ -97,10 +96,6 @@
         }
 
         startTimer() {
-          this.setState((state, props) => ({
-            deadline: (new Date()).getTime() + this.state.secondsTotal * 1000,
-          }));
-
           this.resumeTimer();
         }
 
@@ -183,13 +178,13 @@
               timer = null;
               break;
             case 'running':
-              timer = <RunningTimer deadline={this.state.deadline} onExpired={this.handleExpired.bind(this)} />;
+              timer = <RunningTimer duration={this.state.secondsTotal} onExpired={this.handleExpired.bind(this)} />;
               break;
             case 'paused':
-              timer = <PausedTimer deadline={this.state.deadline} />;
+              timer = <PausedTimer duration={this.state.secondsTotal} />;
               break;
             case 'firing':
-              timer = <PausedTimer deadline={0} />;
+              timer = <PausedTimer duration={0} />;
               break;
           }
 
