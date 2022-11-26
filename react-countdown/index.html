@@ -42,7 +42,7 @@
         constructor(props) {
           super(props);
           this.interval = null;
-          this.deadline = (new Date()).getTime() + props.duration * 1000;
+          this.deadline = performance.now() + props.duration * 1000;
           this.state = {
             secondsRemaining: props.duration,
           };
@@ -60,8 +60,7 @@
         }
 
         handleTick() {
-          let now = new Date().getTime();
-          let secondsRemaining = Math.max(0, (this.deadline - now) / 1000);
+          let secondsRemaining = Math.max(0, (this.deadline - performance.now()) / 1000);
 
           if(secondsRemaining == 0) {
             clearInterval(this.interval);
@@ -112,12 +111,12 @@
         resumeTimer() {
           this.setState((state, _) => ({
             state: 'running',
-            deadline: new Date((new Date()).getTime() + state.secondsRemaining * 1000),
+            deadline: performance.now() + state.secondsRemaining * 1000,
           }));
         }
 
         pauseTimer() {
-          let secondsRemaining = (this.state.deadline - new Date()) / 1000;
+          let secondsRemaining = (this.state.deadline - performance.now()) / 1000;
           this.setState({
             state: 'paused',
 
