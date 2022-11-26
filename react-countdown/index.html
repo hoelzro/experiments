@@ -41,37 +41,36 @@
       class RunningTimer extends React.Component {
         constructor(props) {
           super(props);
-          this.interval = null;
+          this.mounted = false;
           this.deadline = performance.now() + props.duration * 1000;
+          this.handleTickBound = this.handleTick.bind(this);
           this.state = {
             secondsRemaining: props.duration,
           };
         }
 
         componentDidMount() {
-          this.interval = setInterval(this.handleTick.bind(this), 1000);
+          this.mounted = true;
+          requestAnimationFrame(this.handleTickBound);
         }
 
         componentWillUnmount() {
-          if(this.interval != null) {
-            clearInterval(this.interval);
-            this.interval = null;
-          }
+          this.mounted = false;
         }
 
-        handleTick() {
-          let secondsRemaining = Math.max(0, (this.deadline - performance.now()) / 1000);
+        handleTick(ts) {
+          let secondsRemaining = Math.max(0, (this.deadline - ts) / 1000);
+
+          this.setState({ secondsRemaining });
 
           if(secondsRemaining == 0) {
-            clearInterval(this.interval);
-            this.interval = null;
             let onExpired = this.props.onExpired;
             if(onExpired) {
               onExpired();
             }
+          } else if(this.mounted) {
+            requestAnimationFrame(this.handleTickBound);
           }
-
-          this.setState({ secondsRemaining });
         }
 
         render() {
