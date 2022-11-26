@@ -1,0 +1,26 @@
+services:
+  # XXX networks/links
+  prometheus:
+    container_name: prometheus
+    read_only: true
+    ports:
+    - '9090:9090'
+    build:
+      context: .
+      dockerfile: prometheus.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    command:
+    - '--config.file=/etc/prometheus/prometheus.yml'
+    - '--storage.tsdb.path=/prometheus'
+    volumes:
+    - type: volume
+      source: prometheus-data
+      target: /prometheus
+
+volumes:
+  prometheus-data:
+    driver_opts:
+      type: tmpfs
