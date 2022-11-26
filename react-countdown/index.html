@@ -62,6 +62,10 @@
           if(secondsRemaining == 0) {
             clearInterval(this.interval);
             this.interval = null;
+            let onExpired = this.props.onExpired;
+            if(onExpired) {
+              onExpired();
+            }
           }
 
           this.setState({ secondsRemaining });
@@ -135,6 +139,12 @@
           });
         }
 
+        handleExpired() {
+          this.setState({
+            state: 'firing',
+          });
+        }
+
         render() {
           function handleSubmit(e) {
             e.preventDefault();
@@ -173,7 +183,7 @@
               timer = null;
               break;
             case 'running':
-              timer = <RunningTimer deadline={this.state.deadline} />;
+              timer = <RunningTimer deadline={this.state.deadline} onExpired={this.handleExpired.bind(this)} />;
               break;
             case 'paused':
               timer = <PausedTimer deadline={this.state.deadline} />;
