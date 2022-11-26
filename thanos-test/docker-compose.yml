@@ -19,8 +19,34 @@ services:
     - type: volume
       source: prometheus-data
       target: /prometheus
+  minio:
+    container_name: minio
+    read_only: true
+    ports:
+    - '9000:9000'
+    - '9091:9091'
+    image: quay.io/minio/minio
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    command:
+    - server
+    - /data
+    - --console-address
+    - ':9091'
+    env_file: minio.env
+    volumes:
+    - type: volume
+      source: minio-data
+      target: /data
+    - type: tmpfs
+      target: /root
+
+  # XXX thanos
 
 volumes:
   prometheus-data:
     driver_opts:
       type: tmpfs
+  minio-data:
