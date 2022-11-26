@@ -34,21 +34,54 @@
         return [ hours, minutes, seconds ].map(value => value.toString().padStart(2, '0')).join(':');
       };
 
-      function RunningTimer(props) {
-        return formatSecondsRemaining(props.secondsRemaining);
+      class RunningTimer extends React.Component {
+        constructor(props) {
+          super(props);
+          this.interval = null;
+          this.deadline = (new Date()).getTime() + props.duration * 1000;
+          this.state = {
+            secondsRemaining: props.duration,
+          };
+        }
+
+        componentDidMount() {
+          this.interval = setInterval(this.handleTick.bind(this), 1000);
+        }
+
+        componentWillUnmount() {
+          if(this.interval != null) {
+            clearInterval(this.interval);
+            this.interval = null;
+          }
+        }
+
+        handleTick() {
+          let now = new Date().getTime();
+          let secondsRemaining = Math.max(0, (this.deadline - now) / 1000);
+
+          if(secondsRemaining == 0) {
+            clearInterval(this.interval);
+            this.interval = null;
+          }
+
+          this.setState({ secondsRemaining });
+        }
+
+        render() {
+          return formatSecondsRemaining(this.state.secondsRemaining);
+        }
       }
 
       function PausedTimer(props) {
-        return <span className='blink'>{formatSecondsRemaining(props.secondsRemaining)}</span>;
+        return <span className='blink'>{formatSecondsRemaining(props.duration)}</span>;
       }
 
       class Countdown extends React.Component {
         constructor(props) {
           super(props);
-          this.interval = null;
           this.state = {
             state: 'stopped',
-            secondsRemaining: 0,
+            deadline: null,
             secondsTotal: null,
           };
         }
@@ -59,26 +92,9 @@
           });
         }
 
-        handleTick() {
-          // XXX is this the right way to go about this?
-          if(this.state.secondsRemaining <= 1) {
-            this.pauseTimer();
-          }
-
-          this.setState((state, _) => {
-            let secondsRemaining = state.secondsRemaining - 1;
-
-            if(secondsRemaining <= 0) {
-              return { secondsRemaining, state: 'firing' };
-            } else {
-              return { secondsRemaining };
-            }
-          });
-        }
-
         startTimer() {
           this.setState((state, props) => ({
-            secondsRemaining: state.secondsTotal,
+            deadline: (new Date()).getTime() + this.state.secondsTotal * 1000,
           }));
 
           this.resumeTimer();
@@ -88,14 +104,9 @@
           this.setState({
             state: 'running',
           });
-
-          this.interval = setInterval(this.handleTick.bind(this), 1000);
         }
 
         pauseTimer() {
-          clearInterval(this.interval);
-          this.interval = null;
-
           this.setState({
             state: 'paused',
           });
@@ -162,13 +173,13 @@
               timer = null;
               break;
             case 'running':
-              timer = <RunningTimer secondsRemaining={this.state.secondsRemaining} />;
+              timer = <RunningTimer deadline={this.state.deadline} />;
               break;
             case 'paused':
-              timer = <PausedTimer secondsRemaining={this.state.secondsRemaining} />;
+              timer = <PausedTimer deadline={this.state.deadline} />;
               break;
             case 'firing':
-              timer = <PausedTimer secondsRemaining={0} />;
+              timer = <PausedTimer deadline={0} />;
               break;
           }
 
