@@ -51,7 +51,6 @@ services:
     ports:
     - '10907:10907'
     - '10909:10909'
-    image: quay.io/thanos/thanos:v0.29.0
     build:
       context: .
       dockerfile: thanos.Dockerfile
