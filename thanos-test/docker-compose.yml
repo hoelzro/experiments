@@ -19,6 +19,8 @@ services:
     - type: volume
       source: prometheus-data
       target: /prometheus
+    links:
+    - thanos
   minio:
     container_name: minio
     read_only: true
@@ -42,11 +44,50 @@ services:
       target: /data
     - type: tmpfs
       target: /root
-
-  # XXX thanos
+  thanos:
+    container_name: thanos
+    read_only: true
+    ports:
+    - '10907:10907'
+    - '10909:10909'
+    image: quay.io/thanos/thanos:v0.29.0
+    build:
+      context: .
+      dockerfile: thanos.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    command:
+    - receive
+    - '--tsdb.path'
+    - /data
+    - '--grpc-address'
+    - '0.0.0.0:10907'
+    - '--http-address'
+    - '0.0.0.0:10909'
+    - '--receive.replication-factor'
+    - '1'
+    - '--label'
+    - 'receive_replica="0"'
+    - '--label'
+    - 'receive_cluster="eu1"'
+    - '--receive.local-endpoint'
+    - '127.0.0.1:10907'
+    - '--remote-write.address'
+    - '0.0.0.0:10908'
+    - '--objstore.config-file'
+    - 'objstore.yml'
+    volumes:
+    - type: volume
+      source: thanos-data
+      target: /data
+    links:
+    - minio
 
 volumes:
   prometheus-data:
     driver_opts:
       type: tmpfs
   minio-data:
+  thanos-data:
