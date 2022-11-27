@@ -84,6 +84,27 @@ services:
       target: /data
     links:
     - minio
+  thanos-query:
+    container_name: thanos-query
+    read_only: true
+    ports:
+    - '19192:19192'
+    - '19090:19090'
+    build:
+      context: .
+      dockerfile: thanos.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    command:
+    - query
+    - '--http-address'
+    - '0.0.0.0:19192'
+    - '--store'
+    - 'dns+thanos-receive:10907'
+    links:
+    - thanos-receive
 
 volumes:
   prometheus-data:
