@@ -29,4 +29,4 @@ scrape_configs:
       - targets: ["localhost:9090"]
 
 remote_write:
-- url: http://thanos:10908/api/v1/receive
+- url: http://thanos-receive:10908/api/v1/receive

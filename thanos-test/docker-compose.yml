@@ -21,7 +21,7 @@ services:
       source: prometheus-data
       target: /prometheus
     links:
-    - thanos
+    - thanos-receive
   minio:
     container_name: minio
     read_only: true
@@ -45,8 +45,8 @@ services:
       target: /data
     - type: tmpfs
       target: /root
-  thanos:
-    container_name: thanos
+  thanos-receive:
+    container_name: thanos-receive
     read_only: true
     ports:
     - '10907:10907'
