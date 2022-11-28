@@ -62,6 +62,7 @@ services:
     - receive
     - '--tsdb.path'
     - /data
+    - '--tsdb.retention=6h'
     - '--grpc-address'
     - '0.0.0.0:10907'
     - '--http-address'
