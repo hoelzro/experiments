@@ -106,6 +106,31 @@ services:
     - 'dns+thanos-receive:10907'
     links:
     - thanos-receive
+  thanos-store:
+    container_name: thanos-store
+    read_only: true
+    ports:
+    - '10905:10905'
+    - '10906:10906'
+    build:
+      context: .
+      dockerfile: thanos.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    tmpfs:
+    - /tmp/thanos-cache
+    command:
+    - store
+    - '--data-dir'
+    - '/tmp/thanos-cache'
+    - '--objstore.config-file'
+    - 'objstore.yml'
+    - '--grpc-address'
+    - '0.0.0.0:10905'
+    - '--http-address'
+    - '0.0.0.0:10906'
 
 volumes:
   prometheus-data:
