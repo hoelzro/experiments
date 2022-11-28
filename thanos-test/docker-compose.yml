@@ -131,6 +131,26 @@ services:
     - '0.0.0.0:10905'
     - '--http-address'
     - '0.0.0.0:10906'
+  thanos-query-lts:
+    container_name: thanos-query-lts
+    read_only: true
+    ports:
+    - '19193:19193'
+    build:
+      context: .
+      dockerfile: thanos.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    command:
+    - query
+    - '--http-address'
+    - '0.0.0.0:19193'
+    - '--store'
+    - 'dns+thanos-store:10905'
+    links:
+    - thanos-store
 
 volumes:
   prometheus-data:
