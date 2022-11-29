@@ -16,6 +16,9 @@ services:
     - '--config.file=/etc/prometheus/prometheus.yml'
     - '--storage.tsdb.path=/prometheus'
     - '--storage.tsdb.retention.time=4h'
+    - '--web.enable-lifecycle'
+    - '--storage.tsdb.min-block-duration=2h'
+    - '--storage.tsdb.max-block-duration=2h'
     volumes:
     - type: volume
       source: prometheus-data
@@ -134,6 +137,32 @@ services:
     - '0.0.0.0:10905'
     - '--http-address'
     - '0.0.0.0:10906'
+  thanos-sidecar:
+    container_name: thanos-sidecar
+    read_only: true
+    ports:
+    - '10901:10901'
+    - '10902:10902'
+    build:
+      context: .
+      dockerfile: thanos.Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    command:
+    - sidecar
+    - '--tsdb.path'
+    - '/prometheus'
+    - '--objstore.config-file'
+    - 'objstore.yml'
+    - '--prometheus.url=http://prometheus:9090'
+    links:
+    - prometheus
+    volumes:
+    - type: volume
+      source: prometheus-data
+      target: /prometheus
 
 volumes:
   prometheus-data:
