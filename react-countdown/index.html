@@ -24,6 +24,8 @@
     <script type='text/javascript' src='https://unpkg.com/babel-standalone@6/babel.min.js'>
     </script>
     <script type='text/babel'>
+      const { useEffect, useState } = React;
+
       function formatSecondsRemaining(seconds) {
         let hours = Math.floor(seconds / 3600);
         seconds %= 3600;
@@ -38,44 +40,24 @@
         return [ hours, minutes, seconds ].map(value => value.toString().padStart(2, '0')).join(':') + ':' + Math.floor(milliseconds).toString().padStart(3, '0');
       };
 
-      class RunningTimer extends React.Component {
-        constructor(props) {
-          super(props);
-          this.mounted = false;
-          this.deadline = performance.now() + props.duration * 1000;
-          this.handleTickBound = this.handleTick.bind(this);
-          this.state = {
-            secondsRemaining: props.duration,
-          };
-        }
+      function RunningTimer(props) {
+        let onExpired = props.onExpired;
+        let [ deadline ] = useState(performance.now() + props.duration * 1000);
+        let [secondsRemaining, setSecondsRemaining] = useState(props.duration);
 
-        componentDidMount() {
-          this.mounted = true;
-          requestAnimationFrame(this.handleTickBound);
-        }
-
-        componentWillUnmount() {
-          this.mounted = false;
-        }
-
-        handleTick(ts) {
-          let secondsRemaining = Math.max(0, (this.deadline - ts) / 1000);
-
-          this.setState({ secondsRemaining });
-
-          if(secondsRemaining == 0) {
-            let onExpired = this.props.onExpired;
-            if(onExpired) {
-              onExpired();
-            }
-          } else if(this.mounted) {
-            requestAnimationFrame(this.handleTickBound);
+        useEffect(() => {
+          if(secondsRemaining != 0) {
+            requestAnimationFrame((ts) => {
+              let newSecondsRemaining = Math.max(0, (deadline - ts) / 1000)
+              setSecondsRemaining(newSecondsRemaining);
+              if(newSecondsRemaining == 0 && onExpired) {
+                onExpired();
+              }
+            });
           }
-        }
+        });
 
-        render() {
-          return formatSecondsRemaining(this.state.secondsRemaining);
-        }
+        return formatSecondsRemaining(secondsRemaining);
       }
 
       function PausedTimer(props) {
