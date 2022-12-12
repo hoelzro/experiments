@@ -1,13 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type position struct {
@@ -156,23 +153,4 @@ func (g *sudokuGrid) generate(seed int64) {
 
 	// XXX assert it's true?
 	g.generateHelper(cells)
-}
-
-func main() {
-	var seed int64
-
-	if len(os.Args) > 1 {
-		var err error
-		seed, err = strconv.ParseInt(os.Args[1], 10, 64)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		seed = time.Now().Unix()
-	}
-
-	g := &sudokuGrid{}
-	g.generate(seed)
-	fmt.Println(g)
-	fmt.Println(seed)
 }

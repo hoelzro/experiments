@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <title>Sudoku WebAssembly Test</title>
+  </head>
+  <body>
+    <p>Hi!</p>
+    <script type='text/javascript' src='wasm_exec.js'></script>
+    <script type='text/javascript'>
+      const go = new Go();
+
+      WebAssembly.instantiateStreaming(fetch('sudoku.wasm'), go.importObject).then(function(result) {
+        go.run(result.instance);
+        console.log(generateSudoku(100));
+      }, function(err) {
+        console.error(err);
+      });
+    </script>
+  </body>
+</html>
