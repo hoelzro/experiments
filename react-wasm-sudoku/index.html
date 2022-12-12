@@ -4,13 +4,26 @@
   </head>
   <body>
     <p>Hi!</p>
+    <div id='content'></div>
     <script type='text/javascript' src='wasm_exec.js'></script>
     <script type='text/javascript'>
       const go = new Go();
 
       WebAssembly.instantiateStreaming(fetch('sudoku.wasm'), go.importObject).then(function(result) {
         go.run(result.instance);
-        console.log(generateSudoku(100));
+        const grid = generateSudoku(new Date().getTime());
+        const contentEl = document.getElementById('content');
+        const gridTableEl = document.createElement('table');
+        for(let row of grid) {
+          let rowEl = document.createElement('tr');
+          for(let cellValue of row) {
+            let cellEl = document.createElement('td');
+            cellEl.innerText = cellValue.toString();
+            rowEl.appendChild(cellEl);
+          }
+          gridTableEl.appendChild(rowEl);
+        }
+        contentEl.appendChild(gridTableEl);
       }, function(err) {
         console.error(err);
       });
