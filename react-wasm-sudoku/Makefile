@@ -4,7 +4,7 @@ sudoku: main.go generate.go
 	go build -o $@ $^
 
 sudoku.wasm: main_js.go generate.go
-	GOOS=js GOARCH=wasm go build -o $@ $^
+	tinygo build -stack-size=32KB -o $@ -target wasm .
 
 clean:
 	rm -f sudoku sudoku.wasm

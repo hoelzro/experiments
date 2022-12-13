@@ -138,6 +138,7 @@ func (g *sudokuGrid) generateHelper(cells []position) bool {
 	return false
 }
 
+//export generateSudoku
 func (g *sudokuGrid) generate(seed int64) {
 	r := rand.New(rand.NewSource(seed))
 	cells := make([]position, 0, 81)
