@@ -20,6 +20,7 @@ func main() {
 
 	if !regexp.MustCompile(`^:\d+$`).MatchString(addr) {
 		network = "unix"
+		_ = os.Remove(addr)
 	}
 
 	listener, err := net.Listen(network, addr)
