@@ -2,16 +2,32 @@ package main
 
 import (
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 )
 
 func main() {
+	network := "tcp"
 	addr := ":8000"
+
+	if len(os.Args) > 1 {
+		addr = os.Args[1]
+	}
+
+	if !regexp.MustCompile(`^:\d+$`).MatchString(addr) {
+		network = "unix"
+	}
+
+	listener, err := net.Listen(network, addr)
+	if err != nil {
+		panic(err)
+	}
 
 	http.Handle("/", http.FileServer(http.Dir(".")))
 
@@ -43,8 +59,8 @@ func main() {
 		http.ServeFile(w, req, "sudoku.wasm")
 	})
 
-	log.Printf("listening on %s", addr)
-	err := http.ListenAndServe(addr, nil)
+	log.Printf("listening on %s", listener.Addr())
+	err = http.Serve(listener, nil)
 	if err != nil {
 		panic(err)
 	}
