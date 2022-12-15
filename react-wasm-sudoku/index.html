@@ -2,28 +2,34 @@
   <head>
     <title>Sudoku WebAssembly Test</title>
     <style type='text/css'>
+      :root {
+        --base-thickness: thin;
+        --block-thickness: medium;
+        --grid-color: black;
+      }
+
       table {
         border-collapse: collapse;
       }
 
       td {
-        border: thin solid black;
+        border: var(--base-thickness) solid var(--grid-color);
       }
 
       tr:nth-child(1) td {
-        border-top: medium solid black;
+        border-top: var(--block-thickness) solid var(--grid-color);
       }
 
       tr:nth-child(3n) td {
-        border-bottom: medium solid black;
+        border-bottom: var(--block-thickness) solid var(--grid-color);
       }
 
       td:nth-child(1) {
-        border-left: medium solid black;
+        border-left: var(--block-thickness) solid var(--grid-color);
       }
 
       td:nth-child(3n) {
-        border-right: medium solid black;
+        border-right: var(--block-thickness) solid var(--grid-color);
       }
     </style>
   </head>
