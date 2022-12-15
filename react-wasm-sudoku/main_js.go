@@ -6,8 +6,9 @@ import "syscall/js"
 
 func generateWrapper(this js.Value, args []js.Value) interface{} {
 	seed := args[0].Int()
+	numBlanks := args[1].Int()
 	g := &sudokuGrid{}
-	g.generate(int64(seed))
+	g.generate(int64(seed), numBlanks)
 
 	jsFriendlyCells := make([]interface{}, 9)
 

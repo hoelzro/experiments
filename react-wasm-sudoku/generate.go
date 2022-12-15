@@ -139,7 +139,7 @@ func (g *sudokuGrid) generateHelper(cells []position) bool {
 }
 
 //export generateSudoku
-func (g *sudokuGrid) generate(seed int64) {
+func (g *sudokuGrid) generate(seed int64, numBlanks int) {
 	r := rand.New(rand.NewSource(seed))
 	cells := make([]position, 0, 81)
 	for i := 0; i < 9; i++ {
@@ -154,4 +154,9 @@ func (g *sudokuGrid) generate(seed int64) {
 
 	// XXX assert it's true?
 	g.generateHelper(cells)
+
+	for i := 0; i < numBlanks; i++ {
+		cell := cells[i]
+		g.cells[cell.i][cell.j] = 0
+	}
 }

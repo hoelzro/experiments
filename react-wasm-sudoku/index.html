@@ -11,14 +11,14 @@
 
       WebAssembly.instantiateStreaming(fetch('sudoku.wasm'), go.importObject).then(function(result) {
         go.run(result.instance);
-        const grid = generateSudoku(new Date().getTime() & 0xffffffff);
+        const grid = generateSudoku(new Date().getTime() & 0xffffffff, 1);
         const contentEl = document.getElementById('content');
         const gridTableEl = document.createElement('table');
         for(let row of grid) {
           let rowEl = document.createElement('tr');
           for(let cellValue of row) {
             let cellEl = document.createElement('td');
-            cellEl.innerText = cellValue.toString();
+            cellEl.innerText = cellValue == 0 ? ' ' : cellValue.toString();
             rowEl.appendChild(cellEl);
           }
           gridTableEl.appendChild(rowEl);

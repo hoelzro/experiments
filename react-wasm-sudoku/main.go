@@ -23,7 +23,7 @@ func main() {
 	}
 
 	g := &sudokuGrid{}
-	g.generate(seed)
+	g.generate(seed, 1)
 	fmt.Println(g)
 	fmt.Println(seed)
 }
