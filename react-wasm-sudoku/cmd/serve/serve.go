@@ -37,7 +37,7 @@ func main() {
 	})
 
 	http.HandleFunc("/sudoku.wasm", func(w http.ResponseWriter, req *http.Request) {
-		rebuildWASMCmd := exec.Command("make", "sudoku.wasm")
+		rebuildWASMCmd := exec.Command("make", "sudoku-hidden.wasm")
 		rebuildWASMCmd.Stdout = os.Stdout
 		rebuildWASMCmd.Stderr = os.Stderr
 
@@ -55,7 +55,7 @@ func main() {
 			return
 		}
 
-		http.ServeFile(w, req, "sudoku.wasm")
+		http.ServeFile(w, req, "sudoku-hidden.wasm")
 	})
 
 	log.Printf("listening on %s", listener.Addr())
