@@ -155,8 +155,101 @@ func (g *sudokuGrid) generate(seed int64, numBlanks int) {
 	// XXX assert it's true?
 	g.generateHelper(cells)
 
-	for i := 0; i < numBlanks; i++ {
+	i := 0
+	for numBlanks > 0 {
 		cell := cells[i]
+		oldValue := g.cells[cell.i][cell.j]
 		g.cells[cell.i][cell.j] = 0
+
+		i++
+
+		// if there's more than one solution it's not a valid puzzle, so restore the old value
+		// and move on to the next
+		if g.numSolutions() > 1 {
+			g.cells[cell.i][cell.j] = oldValue
+			continue
+		}
+
+		numBlanks--
 	}
+}
+
+func (g *sudokuGrid) numSolutions() int {
+	return len(g.findAllSolutions())
+}
+
+func (g *sudokuGrid) findAllSolutionsHelper(accum *[]sudokuGrid) {
+	// find cells that still need a value
+	blankCells := make([]position, 0)
+	for i, row := range g.cells {
+		for j, value := range row {
+			if value == 0 {
+				blankCells = append(blankCells, position{i, j})
+			}
+		}
+	}
+
+	// if there are none, we've found a solution
+	if len(blankCells) == 0 {
+		solution := sudokuGrid{}
+		for i, row := range g.cells {
+			for j, value := range row {
+				solution.cells[i][j] = value
+			}
+		}
+
+		*accum = append(*accum, solution)
+		return
+	}
+
+	// calculate valid values for each one
+	validValues := make(map[position]map[int]struct{})
+	for _, cell := range blankCells {
+		cellValues := map[int]struct{}{
+			1: {},
+			2: {},
+			3: {},
+			4: {},
+			5: {},
+			6: {},
+			7: {},
+			8: {},
+			9: {},
+		}
+
+		for _, otherCell := range Neighbors[cell] {
+			delete(cellValues, g.cells[otherCell.i][otherCell.j])
+		}
+
+		validValues[cell] = cellValues
+	}
+
+	// find the cell that has the lowest number of valid values
+	var nextCell position
+	lowestValidValues := 10
+	for _, cell := range blankCells {
+		cellValues := validValues[cell]
+		if len(cellValues) < lowestValidValues {
+			nextCell = cell
+			lowestValidValues = len(cellValues)
+		}
+	}
+
+	// for each value, fill in the cell with it and recurse to move on to the next
+	for value := range validValues[nextCell] {
+		g.cells[nextCell.i][nextCell.j] = value
+
+		g.findAllSolutionsHelper(accum)
+	}
+
+	// restore the blank value before returning control to caller to backtrack
+	g.cells[nextCell.i][nextCell.j] = 0
+}
+
+func (g *sudokuGrid) findAllSolutions() []sudokuGrid {
+	var solutions []sudokuGrid
+
+	g.findAllSolutionsHelper(&solutions)
+
+	return solutions
 }
