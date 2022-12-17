@@ -14,11 +14,20 @@ data:
           "directory": "./data"
         "type": "FILESYSTEM"
     scrape_configs:
-    - job_name: pr
+    - job_name: parca
       scrape_interval: '15s'
       scrape_timeout: '5s'
       static_configs:
-      - targets: ['127.0.0.1:7070', 'time-waster.time-waster.svc.cluster.local:6060']
+      - targets: ['127.0.0.1:7070']
+      profiling_config:
+        pprof_config:
+          config_1:
+            enabled: true
+    - job_name: time-waster
+      scrape_interval: '15s'
+      scrape_timeout: '5s'
+      static_configs:
+      - targets: ['time-waster.time-waster.svc.cluster.local:6060']
       profiling_config:
         pprof_config:
           config_1:
