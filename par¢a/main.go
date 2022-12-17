@@ -3,8 +3,11 @@ package main
 import (
 	"log"
 	"math/rand"
+	"net/http"
 	"sort"
 	"time"
+
+	_ "net/http/pprof"
 )
 
 type position struct {
@@ -240,6 +243,10 @@ func generatePuzzle() {
 }
 
 func main() {
+	go func() {
+		log.Println(http.ListenAndServe(":6060", nil))
+	}()
+
 	rand.Seed(time.Now().Unix())
 
 	calibrationCount := 100
