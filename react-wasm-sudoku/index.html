@@ -51,7 +51,7 @@
           for(let cellValue of row) {
             let cellEl = document.createElement('td');
             if(cellValue == 0) {
-              cellEl.innerHTML = '<input type="number" min="1" max="9" style="width: 3em" />';
+              cellEl.innerHTML = '<input type="text" inputmode="numeric" pattern="^\\d*$" style="width: 1.5em" />';
             } else {
               cellEl.innerText = cellValue.toString();
             }
