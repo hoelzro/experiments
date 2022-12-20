@@ -50,7 +50,11 @@
           let rowEl = document.createElement('tr');
           for(let cellValue of row) {
             let cellEl = document.createElement('td');
-            cellEl.innerText = cellValue == 0 ? ' ' : cellValue.toString();
+            if(cellValue == 0) {
+              cellEl.innerHTML = '<input type="number" min="1" max="9" style="width: 3em" />';
+            } else {
+              cellEl.innerText = cellValue.toString();
+            }
             rowEl.appendChild(cellEl);
           }
           gridTableEl.appendChild(rowEl);
