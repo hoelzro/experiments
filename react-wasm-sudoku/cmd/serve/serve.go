@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 )
 
@@ -30,7 +32,7 @@ func main() {
 
 	http.Handle("/", http.FileServer(http.Dir(".")))
 
-	wasmExecLocation := "/usr/lib/tinygo/targets/wasm_exec.js"
+	wasmExecLocation := filepath.Join(runtime.GOROOT(), "misc", "wasm", "wasm_exec.js")
 
 	http.HandleFunc("/wasm_exec.js", func(w http.ResponseWriter, req *http.Request) {
 		http.ServeFile(w, req, wasmExecLocation)

@@ -2,7 +2,9 @@
 
 package main
 
-import "syscall/js"
+import (
+	"syscall/js"
+)
 
 func generateWrapper(this js.Value, args []js.Value) interface{} {
 	seed := args[0].Int()

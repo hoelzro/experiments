@@ -44,7 +44,7 @@
 
       WebAssembly.instantiateStreaming(fetch('sudoku.wasm'), go.importObject).then(function(result) {
         go.run(result.instance);
-        const grid = generateSudoku(new Date().getTime() & 0xffffffff, 1);
+        const grid = generateSudoku(new Date().getTime(), 1);
         const contentEl = document.getElementById('content');
         const gridTableEl = document.createElement('table');
         for(let row of grid) {
