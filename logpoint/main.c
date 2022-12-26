@@ -32,12 +32,16 @@ foo()
 }
 
 int
-main(void)
+main(int argc, char **argv)
 {
     pid_t tracee;
     int status;
 
-    breakpoint_line_no = 0;
+    if(argc < 2) {
+        die("usage: %s [breakpoint]", argv[0]);
+    }
+
+    breakpoint_line_no = atoi(argv[1]);
 
     tracee = fork();
     if(tracee == -1) {
