@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +11,7 @@
     fprintf(stderr, msg "\n", ##args);\
     exit(1);
 
-extern long long fib(int n);
+extern uint64_t fib(int n);
 
 int breakpoint_line_no;
 
@@ -37,12 +38,14 @@ main(int argc, char **argv)
 {
     pid_t tracee;
     int status;
+    const char *target_expr;
 
-    if(argc < 2) {
-        die("usage: %s [breakpoint]", argv[0]);
+    if(argc < 3) {
+        die("usage: %s [breakpoint] [expr]", argv[0]);
     }
 
     breakpoint_line_no = atoi(argv[1]);
+    target_expr = argv[2];
 
     tracee = fork();
     if(tracee == -1) {
@@ -91,7 +94,27 @@ main(int argc, char **argv)
                 }
 
                 if(WSTOPSIG(exit_status) == SIGTRAP) {
-                    printf("tracee hit a breakpoint\n");
+                    extern uint64_t a, b;
+                    uint64_t *target;
+                    long target_value;
+
+                    if(!strcmp(target_expr, "a")) {
+                        target = &a;
+                    } else if(!strcmp(target_expr, "b")) {
+                        target = &b;
+                    } else {
+                        fprintf(stderr, "invalid target expression '%s'\n", target_expr);
+                    }
+
+                    target_value = ptrace(PTRACE_PEEKDATA, tracee, target, 0);
+                    // XXX distinguish between failure and actual value of -1?
+                    if(target_value == -1) {
+                        fprintf(stderr, "unable to peek at target expression: %s\n", strerror(errno));
+                        break;
+                    }
+
+                    printf("%ld\n", target_value);
+
                     status = ptrace(PTRACE_CONT, tracee, 0, 0);
                 } else {
                     status = ptrace(PTRACE_CONT, tracee, 0, WSTOPSIG(exit_status));
@@ -116,6 +139,5 @@ main(int argc, char **argv)
         return 0;
     }
 
-    // XXX pause the thread upon break, then print the target symbol, then resume the thread
     return 0;
 }

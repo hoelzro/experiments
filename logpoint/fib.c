@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <signal.h>
 
 extern int breakpoint_line_no;
@@ -7,10 +8,10 @@ extern int breakpoint_line_no;
         raise(SIGTRAP);
 
 // globals for now
-long long a;
-long long b;
+uint64_t a;
+uint64_t b;
 
-long long
+uint64_t
 fib(int n)
 {
     int i;
@@ -23,7 +24,7 @@ fib(int n)
     for(i = 0; i < n; i++) {
         maybe_breakpoint();
 
-        long long new_b = a + b;
+        uint64_t new_b = a + b;
         a = b;
         b = new_b;
     }
