@@ -50,9 +50,29 @@ main(int argc, char **argv)
     }
 
     if(tracee) {
-        while(1) {
-            int exit_status;
+        int exit_status;
 
+        // wait for the tracee to trap itself so that we can set up ptrace options
+        status = waitpid(tracee, &exit_status, 0);
+        if(status == -1) {
+            die("failed to wait for tracee: %s", strerror(errno));
+        }
+
+        if(!WIFSTOPPED(exit_status) || WSTOPSIG(exit_status) != SIGTRAP) {
+            die("expected the tracee to trap itself, but it didn't =S\n");
+        }
+
+        status = ptrace(PTRACE_SETOPTIONS, tracee, 0, PTRACE_O_EXITKILL);
+        if(status == -1) {
+            die("unable to set up ptrace options: %s", strerror(errno));
+        }
+
+        status = ptrace(PTRACE_CONT, tracee, 0, 0);
+        if(status == -1) {
+            die("unable to resume tracee: %s", strerror(errno));
+        }
+
+        while(1) {
             status = waitpid(tracee, &exit_status, 0);
             if(status == -1) {
                 fprintf(stderr, "failed to wait for tracee: %s\n", strerror(errno));
@@ -89,7 +109,8 @@ main(int argc, char **argv)
             die("unable to set tracee up for tracing: %s", strerror(errno));
         }
 
-        // XXX set options so we die if our parent does?
+        // throw in an artificial trap so that we can set options from the parent
+        raise(SIGTRAP);
 
         foo();
         return 0;
