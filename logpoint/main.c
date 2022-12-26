@@ -18,7 +18,7 @@ int breakpoint_line_no;
 static void
 baz()
 {
-    printf("%d\n", fib(100));
+    printf("%lu\n", fib(100));
 }
 
 static void
