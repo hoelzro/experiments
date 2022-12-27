@@ -1,11 +1,8 @@
 #include <stdint.h>
 #include <signal.h>
 
-extern int breakpoint_line_no;
-
 #define maybe_breakpoint()\
-    if(__LINE__ == breakpoint_line_no)\
-        raise(SIGTRAP);
+    asm("nop")
 
 // globals for now
 uint64_t a;
