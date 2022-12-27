@@ -139,7 +139,7 @@ main(int argc, char **argv)
     if(tracee) {
         int exit_status;
 
-        // wait for the tracee to trap itself so that we can set up ptrace options
+        // wait for the tracee to trap itself so that we can set up ptrace options and the breakpoint
         status = waitpid(tracee, &exit_status, 0);
         if(status == -1) {
             die("failed to wait for tracee: %s", strerror(errno));
@@ -149,9 +149,31 @@ main(int argc, char **argv)
             die("expected the tracee to trap itself, but it didn't =S\n");
         }
 
+        // set ptrace options
         status = ptrace(PTRACE_SETOPTIONS, tracee, 0, PTRACE_O_EXITKILL);
         if(status == -1) {
             die("unable to set up ptrace options: %s", strerror(errno));
+        }
+
+        // set breakpoint via DR0
+        status = ptrace(PTRACE_POKEUSER, tracee, offsetof(struct user, u_debugreg[0]), breakpoint_addr);
+        if(status == -1) {
+            die("unable to set breakpoint address in debug register: %s", strerror(errno));
+        }
+
+        // start with DR7 as a clean slate
+        unsigned long dr7 = 0;
+
+        dr7 |= (1 << 0); // set bit 0 to enable local task usage of DR0 (XXX try bit 1 if that doesn't work)
+
+        // bits 16 & 17 determine the type of breakpoint - 0b00 means "break on execute", so leave that alone
+
+        // XXX Dr7 bits 18 & 19 determine watched region size - start with 00b to monitor one byte and go from there
+
+        // set debug control flags via DR7
+        status = ptrace(PTRACE_POKEUSER, tracee, offsetof(struct user, u_debugreg[7]), dr7);
+        if(status == -1) {
+            die("unable to set debug register control flags: %s", strerror(errno));
         }
 
         status = ptrace(PTRACE_CONT, tracee, 0, 0);
