@@ -1,9 +1,12 @@
 #include <errno.h>
+#include <limits.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ptrace.h>
+#include <sys/user.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -12,8 +15,6 @@
     exit(1);
 
 extern uint64_t fib(int n);
-
-int breakpoint_line_no;
 
 static void
 baz()
@@ -33,18 +34,101 @@ foo()
     bar();
 }
 
+static uintptr_t
+apply_text_segment_offset(uintptr_t offset)
+{
+    char *line = NULL;
+    size_t length;
+    FILE *fp;
+    ssize_t bytes_read;
+    char exe_path[PATH_MAX + 1];
+    uintptr_t result = 0;
+
+    bytes_read = readlink("/proc/self/exe", exe_path, PATH_MAX);
+
+    if(bytes_read == -1) {
+        return -1;
+    }
+    exe_path[bytes_read] = '\0';
+
+    fp = fopen("/proc/self/maps", "r");
+
+    if(!fp) {
+        return -1;
+    }
+
+    while(getline(&line, &length, fp) != -1) {
+        char *cursor = NULL;
+        char *token;
+
+        uintptr_t region_start;
+        uintptr_t file_offset;
+
+        // parse the start address for the region
+        token = strtok_r(line, " ", &cursor);
+        *strchr(token, '-') = '\0';
+        region_start = strtoul(token, NULL, 16);
+
+        // grab the permissions - if the region we're looking at doesn't have
+        // execute permissions, it's not a text segment so skip it
+        token = strtok_r(NULL, " ", &cursor);
+        if(!strchr(token, 'x')) {
+            continue;
+        }
+
+        // parse the offset field
+        token = strtok_r(NULL, " ", &cursor);
+        file_offset = strtoul(token, NULL, 16);
+
+        // skip the dev and inode fields
+        strtok_r(NULL, " ", &cursor);
+        strtok_r(NULL, " ", &cursor);
+
+        // get the pathname field
+        token = strtok_r(NULL, " ", &cursor);
+
+        // strip trailing newlines
+        while(strlen(token) && token[strlen(token) - 1] == '\n') {
+            token[strlen(token) - 1] = '\0';
+        }
+
+        // if we're looking at a region that doesn't correspond to our executable, move along
+        if(strcmp(token, exe_path)) {
+            continue;
+        }
+
+        // XXX make sure the offset is before the region end?
+        // XXX make sure it's set exactly once?
+        result = region_start + offset - file_offset;
+    }
+
+    free(line);
+
+    if(!feof(fp)) {
+        fclose(fp);
+        return -1;
+    }
+
+    fclose(fp);
+
+    return result;
+}
+
 int
 main(int argc, char **argv)
 {
     pid_t tracee;
     int status;
     const char *target_expr;
+    uintptr_t breakpoint_addr;
 
     if(argc < 3) {
         die("usage: %s [breakpoint] [expr]", argv[0]);
     }
 
-    breakpoint_line_no = atoi(argv[1]);
+    breakpoint_addr = strtoul(argv[1], NULL, 16);
+    breakpoint_addr = apply_text_segment_offset(breakpoint_addr);
+
     target_expr = argv[2];
 
     tracee = fork();
