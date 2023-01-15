@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-vs-k8s-caps
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: docker-vs-k8s-caps
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: docker-vs-k8s-caps
+    spec:
+      containers:
+      - name: main
+        image: chroot-sleep
+        imagePullPolicy: Never
+        command: ["cat", "/proc/self/status"]
