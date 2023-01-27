@@ -1,0 +1,178 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope itemtype="http://schema.org/Webpage" lang='en'>
+<head>
+
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<meta name='author' content='Rob Hoelz' />
+<meta name='date' content='' />
+<meta name='description' content="" />
+<meta name='keywords' content='perl,lua,programming,coding,learning' />
+<meta name='twitter:dnt' content='on' />
+<title>Search Results</title>
+<link rel="stylesheet" href="/css/style.css" />
+<link rel='alternate' type='application/rss+xml' title='hoelz.ro - All Updates' href='/feed.rss' />
+<link rel='alternate' type='application/rss+xml' title='hoelz.ro - Full Pages' href='/full.rss' />
+<link rel='canonical' href='https://hoelz.ro/search-placeholder' />
+
+<meta itemprop="name" content="Search Results" />
+<meta itemprop="description" content="" />
+<meta itemprop="image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:site" content="@hoelzro" />
+<meta name="twitter:title" content="Search Results" />
+<meta name="twitter:description" content="" />
+<meta name="twitter:creator" content="@hoelzro" />
+<meta name="twitter:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
+<meta name="twitter:image:alt" content="A picture of Rob" />
+
+<meta property="og:title" content="Search Results" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://hoelz.ro/search-placeholder" /> <!-- XXX FIXME -->
+<meta property="og:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
+<meta property="og:description" content="" />
+<meta property="og:site_name" content="hoelz.ro" />
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<script type="text/javascript" src="/javascripts/turbolinks.js">
+</script>
+
+</head>
+<body>
+  <div id='topbar'>
+    <ul>
+      <li><a rel='start' href='/'>Home</a></li>
+      <li><a href='/archive'>Blog Archive</a></li>
+      <li><a href='/blog-series'>Blog Series</a></li>
+      <li><a href='/tag/favorites'>Favorite Posts</a></li>
+      <li><a href='/ref'>Reference</a></li>
+      <li><a href='/about-me'>About Me</a></li>
+    </ul>
+
+    <span class='social-icons'>
+     <a
+  href='http://twitter.com/hoelzro'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon twitter'>
+twitter
+</a>
+
+     <a
+  href='https://github.com/hoelzro'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon github'>
+github
+</a>
+
+     <a
+  href='/feed.rss'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon rss'>
+rss
+</a>
+
+     <a
+  href='#'
+  target='_self'
+  
+  class='social-icon email'>
+email
+</a>
+
+    </span>
+
+    <form action='/search' method='get'>
+      <input name='q' type='text' aria-label='Search Query' />
+      <button>Search</button>
+    </form>
+  </div>
+
+  <div id='sidebar'>
+    <h1>hoelz.ro</h1>
+
+    <img id='gravatar' src='https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180' alt='My picture' />
+
+    <ul>
+      <li><a rel='start' href='/'>Home</a></li>
+      <li><a href='/archive'>Blog Archive</a></li>
+      <li><a href='/blog-series'>Blog Series</a></li>
+      <li><a href='/tag/favorites'>Favorite Posts</a></li>
+      <li><a href='/ref'>Reference</a></li>
+      <li><a href='/about-me'>About Me</a></li>
+    </ul>
+
+    <form action='/search' method='get' id='search-form'>
+      <input name='q' id='q' type='text' aria-label='Search Query'/>
+      <button id='search'>Search</button>
+      <abbr id='search-help' title='You can use AND or OR to combine terms (OR is implied by spacing)'>Search Help</abbr>
+    </form>
+
+    <div class='clear-it'>
+    </div>
+
+    <span class='social-icons'>
+     <a
+  href='http://twitter.com/hoelzro'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon twitter'>
+twitter
+</a>
+
+     <a
+  href='https://github.com/hoelzro'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon github'>
+github
+</a>
+
+     <a
+  href='/feed.rss'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon rss'>
+rss
+</a>
+
+     <a
+  href='#'
+  target='_self'
+  
+  class='social-icon email'>
+email
+</a>
+
+    </span>
+  </div>
+
+  <div id='content'>
+  <p><ul>
+{% for (url, title) in matches %}
+  <li><a href="/« url »">« title »</a></li>
+{% endfor %}
+</ul>
+</p>
+
+</div>
+
+  <div class='clear-it'></div>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"
+          type="text/javascript"
+          integrity="sha384-8gBf6Y4YYq7Jx97PIqmTwLPin4hxIzQw5aDmUg/DDhul9fFpbbLcLh3nTIIDJKhx"
+          crossorigin="anonymous"></script>
+  <script type="text/javascript" src="/javascripts/bigfoot.js">
+  </script>
+  <script type='text/javascript' src='/javascripts/main.js'></script>
+</body>
+</html>
+
+
