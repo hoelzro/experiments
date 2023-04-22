@@ -11,8 +11,7 @@ async def main():
     sleepers = [ sleepy_time(i) for i in range(5) ]
 
     print('waiting for sleepers')
-    for sleeper in sleepers:
-        await sleeper
+    await asyncio.gather(*sleepers)
     print('done waiting')
 
 asyncio.run(main())
