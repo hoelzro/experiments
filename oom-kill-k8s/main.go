@@ -21,6 +21,19 @@ const PageSize = 4_096
 func main() {
 	memoryChunks := make([][]byte, 0)
 
+	if len(os.Args) > 1 {
+		appetizerBites, err := parseMemoryAmount(os.Args[1])
+		if err != nil {
+			panic("unable to parse initial memory chunk size")
+		}
+
+		chunk := make([]byte, appetizerBites)
+		for i := 0; i < int(appetizerBites); i += PageSize {
+			chunk[i] = 1
+		}
+		memoryChunks = append(memoryChunks, chunk)
+	}
+
 	hostname, err := os.Hostname()
 	if err != nil {
 		panic("unable to get hostname")
