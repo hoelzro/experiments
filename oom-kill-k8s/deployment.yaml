@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oom-kill-k8s
+spec:
+  replicas: 8
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: oom-kill-k8s
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: oom-kill-k8s
+    spec:
+      containers:
+      - name: main
+        image: oom-kill-k8s:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8060
+        resources:
+          limits:
+            memory: 1Gi
+          requests:
+            memory: 100Mi
