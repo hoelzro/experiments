@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -10,12 +12,19 @@ import (
 )
 
 //go:embed index.html
-var indexHTMLContents []byte
+var indexHTMLContents string
+
+var indexHTMLTemplate *template.Template = template.Must(template.New("index.html").Parse(indexHTMLContents))
 
 const PageSize = 4_096
 
 func main() {
 	memoryChunks := make([][]byte, 0)
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		panic("unable to get hostname")
+	}
 
 	http.HandleFunc("/status", func(w http.ResponseWriter, req *http.Request) {
 		procStatus, err := os.ReadFile("/proc/self/status")
@@ -38,10 +47,28 @@ func main() {
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		responseBuffer := &bytes.Buffer{}
+		err := indexHTMLTemplate.Execute(responseBuffer, map[string]string{
+			"Hostname": hostname,
+		})
+		if err != nil {
+			log.Printf("unable to process template: %v", err)
+
+			msg := []byte("Internal Server Error\n")
+			w.Header().Add("Content-Type", "text/plain")
+			w.Header().Add("Content-Length", strconv.Itoa(len(msg)))
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(msg)
+
+			return
+		}
+
+		responseBody := responseBuffer.Bytes()
+
 		w.Header().Add("Content-Type", "text/html")
-		w.Header().Add("Content-Length", strconv.Itoa(len(indexHTMLContents)))
+		w.Header().Add("Content-Length", strconv.Itoa(len(responseBody)))
 		w.WriteHeader(http.StatusOK)
-		w.Write(indexHTMLContents)
+		w.Write(responseBody)
 	})
 
 	http.HandleFunc("/eat-memory", func(w http.ResponseWriter, req *http.Request) {
@@ -78,7 +105,7 @@ func main() {
 
 	bindAddress := ":8060"
 	log.Printf("listening on %s...", bindAddress)
-	err := http.ListenAndServe(bindAddress, nil)
+	err = http.ListenAndServe(bindAddress, nil)
 	if err != nil {
 		log.Printf("unable to listen on %s: %v", bindAddress, err)
 	}
