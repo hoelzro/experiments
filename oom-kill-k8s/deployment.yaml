@@ -24,3 +24,7 @@ spec:
             memory: 1Gi
           requests:
             memory: 100Mi
+        readinessProbe:
+          httpGet:
+            port: http
+            path: /
