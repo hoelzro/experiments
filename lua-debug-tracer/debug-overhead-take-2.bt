@@ -1,0 +1,16 @@
+uprobe:/tmp/lua-5.3.6/src/lua5.3:luaD_hook {
+  @hook_start = nsecs;
+}
+
+uretprobe:/tmp/lua-5.3.6/src/lua5.3:luaD_hook {
+  @hook_overhead += nsecs - @hook_start;
+}
+
+interval:s:10 {
+  print(@hook_overhead);
+}
+
+END {
+  clear(@hook_start);
+  clear(@hook_overhead);
+}

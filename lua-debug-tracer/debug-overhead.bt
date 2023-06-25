@@ -1,0 +1,24 @@
+interval:s:10 /@target_pid!=0/ {
+  // XXX dump reports
+  print(@);
+  clear(@);
+}
+
+tracepoint:sched:sched_process_exec /comm=="lua5.3"/ {
+  @target_pid = pid;
+}
+
+tracepoint:sched:sched_process_exit /pid==@target_pid/ {
+  // print(@);
+  clear(@);
+  clear(@target_pid);
+  exit();
+}
+
+profile:hz:100 /pid==@target_pid/ {
+  // XXX not scoped to a pid :(
+  @[ustack] = count();
+  // XXX capture stack trace
+}
+
+// XXX also dump upon exit, yeah?
