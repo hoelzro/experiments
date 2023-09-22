@@ -81,10 +81,43 @@ parse_madvise(const char *s, int *out)
     NYI();
 }
 
+struct duration_unit {
+    char *suffix;
+    int mult;
+};
+
+struct duration_unit duration_units[] = {
+    { "h", 60 * 60 },
+    { "m", 60 },
+    { "s", 1 },
+    { "", 1 },
+};
+
 static int
 parse_duration(const char *s, int *out)
 {
-    NYI();
+    char *end;
+    int mult = -1;
+    int i;
+
+    *out = strtol(s, &end, 10);
+    if(end == s) {
+        return -1;
+    }
+
+    for(i = 0; i < sizeof(duration_units) / sizeof(duration_units[0]); i++) {
+        if(!strcmp(end, duration_units[i].suffix)) {
+            mult = duration_units[i].mult;
+            break;
+        }
+    }
+
+    if(mult == -1) {
+        return -1;
+    }
+
+    *out *= mult;
+    return 0;
 }
 
 int
