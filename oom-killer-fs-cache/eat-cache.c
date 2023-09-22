@@ -148,7 +148,7 @@ main(int argc, char **argv)
     int dump_interval   = GIBIBYTE;
     int sleep_time      = 0;
 
-    while((opt = getopt_long(argc, argv, "", options, NULL))) {
+    while((opt = getopt_long(argc, argv, "", options, NULL)) != -1) {
         switch(opt) {
             case FILE_BYTES_OPTION:
                 status = parse_bytes(optarg, &bytes_to_read);
