@@ -78,7 +78,21 @@ parse_bytes(const char *s, long *out)
 static int
 parse_madvise(const char *s, int *out)
 {
-    NYI();
+#define HANDLE(flag_value)\
+    if(!strcmp(s, #flag_value)) {\
+        *out = flag_value;\
+        return 0;\
+    }
+
+    HANDLE(MADV_NORMAL);
+    HANDLE(MADV_RANDOM);
+    HANDLE(MADV_SEQUENTIAL);
+    HANDLE(MADV_WILLNEED);
+    HANDLE(MADV_DONTNEED);
+
+#undef HANDLE
+
+    return -1;
 }
 
 struct duration_unit {
