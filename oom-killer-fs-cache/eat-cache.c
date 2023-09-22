@@ -1,6 +1,7 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <sys/mman.h>
 
@@ -35,10 +36,43 @@ static struct option options[] = {
 #define NYI()\
     die("%s NYI", __FUNCTION__);
 
-static int
-parse_bytes(const char *s, int *out)
+struct byte_unit {
+    char *suffix;
+    long mult;
+};
+
+struct byte_unit units[] = {
+    { "K", 1 << 10 },
+    { "M", 1 << 20 },
+    { "G", 1 << 30 },
+    { "", 1 },
+};
+
+static long
+parse_bytes(const char *s, long *out)
 {
-    NYI();
+    char *end;
+    long mult = -1;
+    int i;
+
+    *out = strtol(s, &end, 10);
+    if(end == s) {
+        return -1;
+    }
+
+    for(i = 0; i < sizeof(units) / sizeof(units[0]); i++) {
+        if(!strcmp(end, units[i].suffix)) {
+            mult = units[i].mult;
+            break;
+        }
+    }
+
+    if(mult == -1) {
+        return -1;
+    }
+
+    *out *= mult;
+    return 0;
 }
 
 static int
@@ -59,13 +93,13 @@ main(int argc, char **argv)
     int opt;
     int status;
 
-    int bytes_to_read  = 0;
-    int bytes_to_alloc = 0;
-    int use_mmap       = 0;
-    int mmap_limit     = 0;
-    int madvise_flag   = MADV_NORMAL;
-    int dump_interval  = GIBIBYTE;
-    int sleep_time     = 0;
+    long bytes_to_read  = 0;
+    long bytes_to_alloc = 0;
+    int use_mmap        = 0;
+    long mmap_limit     = 0;
+    int madvise_flag    = MADV_NORMAL;
+    int dump_interval   = GIBIBYTE;
+    int sleep_time      = 0;
 
     while((opt = getopt_long(argc, argv, "", options, NULL))) {
         switch(opt) {
