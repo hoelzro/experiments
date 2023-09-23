@@ -414,7 +414,7 @@ main(int argc, char **argv)
                 }
                 break;
             case DUMP_INTERVAL_OPTION:
-                status = parse_duration(optarg, &dump_interval);
+                status = parse_bytes(optarg, &dump_interval);
                 if(status != 0) {
                     die("unable to parse duration for --dump-interval");
                 }
