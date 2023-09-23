@@ -196,7 +196,7 @@ convert_kb(char *line)
 }
 
 static void
-convert_bytes(char *line)
+convert_bytes(char *line, size_t n)
 {
     char *p;
     long bytes;
@@ -222,11 +222,8 @@ convert_bytes(char *line)
 
     bytes = strtol(p, NULL, 10);
 
-    remaining_space = strlen(line) + 1 - (p - line);
+    remaining_space = n - (p - line);
     bytes_written = snprintf(p, remaining_space, "%.2f mB\n", bytes / 1048576.0);
-
-    // we're reading things from memory.stat, which doesn't include a nice amount
-    // of padding before the value :(
     assert(bytes_written < remaining_space);
 }
 
@@ -312,7 +309,7 @@ print_memory_report(void)
 
     while((getline(&line, &len, fp)) != -1) {
         if(strcasestr(line, "active_file")) {
-            convert_bytes(line);
+            convert_bytes(line, len);
             printf("%s", line);
         }
     }
