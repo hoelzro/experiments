@@ -373,7 +373,7 @@ populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long lon
 }
 
 static void
-populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump_interval, int argc, char **argv)
+populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump_interval, unsigned long long mmap_limit, int argc, char **argv)
 {
     int i;
     int status;
@@ -403,12 +403,16 @@ populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump
             map_len += PAGE_SIZE - (map_len % PAGE_SIZE);
         }
 
+        if(mmap_limit && map_len > mmap_limit) {
+            map_len = mmap_limit;
+        }
+
         map = mmap(NULL, map_len, PROT_READ, MAP_PRIVATE, fd, 0);
         if(map == MAP_FAILED) {
             die("unable to mmap %s: %s", argv[i], strerror(errno));
         }
 
-        for(j = 0; j < s.st_size; j++) {
+        for(j = 0; j < map_len; j++) {
             status = map[j]; // XXX can I guarantee this doesn't get optimized out?
             bytes_read_in++;
             total_bytes_read_in++;
@@ -500,7 +504,7 @@ main(int argc, char **argv)
     // XXX drop caches
 
     if(use_mmap) {
-        populate_fs_cache_mmap(bytes_to_read, dump_interval, argc - optind, argv + optind);
+        populate_fs_cache_mmap(bytes_to_read, dump_interval, mmap_limit, argc - optind, argv + optind);
     } else {
         populate_fs_cache_regular_io(bytes_to_read, dump_interval, argc - optind, argv + optind);
     }
