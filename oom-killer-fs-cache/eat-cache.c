@@ -1,7 +1,13 @@
+#include <assert.h>
+#include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <getopt.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <sys/mman.h>
 
@@ -134,6 +140,239 @@ parse_duration(const char *s, int *out)
     return 0;
 }
 
+static int
+has_prefix(const char *s, const char *prefix)
+{
+    return !strncmp(s, prefix, strlen(prefix));
+}
+
+static void
+convert_kb(char *line)
+{
+    char *p;
+    long kb;
+    size_t remaining_space;
+    size_t bytes_written;
+
+    p = strstr(line, "kB");
+    assert(p);
+
+    p--;
+
+    // back up over spaces between the amount and "kB"
+    while(p >= line && isspace(*p)) {
+        p--;
+    }
+
+    // back up to the beginning of the amount
+    while(p >= line && isdigit(*p)) {
+        p--;
+    }
+    assert(p >= line);
+
+    p++;
+    assert(isdigit(*p));
+
+    kb = strtol(p, NULL, 10);
+
+    remaining_space = strlen(line) + 1 - (p - line);
+    bytes_written = snprintf(p, remaining_space, "%.2f mB\n", kb / 1024.0);
+
+    if(bytes_written >= remaining_space) {
+        // if we ran out of space, it's probably the case that it was something like
+        // "0 kB" - so back enough over enough spaces before the number to provide
+        // enough room to fit
+        do {
+            p--;
+            remaining_space++;
+        } while(p >= line && isspace(*p) && bytes_written >= remaining_space);
+        assert(p >= line);
+        assert(isspace(*p));
+
+        // …and then try again
+        bytes_written = snprintf(p, remaining_space, "%.2f mB\n", kb / 1024.0);
+        assert(bytes_written < remaining_space);
+    }
+}
+
+static void
+convert_bytes(char *line)
+{
+    char *p;
+    long bytes;
+    size_t remaining_space;
+    size_t bytes_written;
+
+    p = line + strlen(line) - 1;
+
+    // trim trailing newlines
+    while(p >= line && *p == '\n') {
+        p--;
+    }
+    assert(p >= line);
+
+    // back up to the beginning of the amount
+    while(p >= line && isdigit(*p)) {
+        p--;
+    }
+    assert(p >= line);
+
+    p++;
+    assert(isdigit(*p));
+
+    bytes = strtol(p, NULL, 10);
+
+    remaining_space = strlen(line) + 1 - (p - line);
+    bytes_written = snprintf(p, remaining_space, "%.2f mB\n", bytes / 1048576.0);
+
+    // we're reading things from memory.stat, which doesn't include a nice amount
+    // of padding before the value :(
+    assert(bytes_written < remaining_space);
+}
+
+static void
+print_memory_report(void)
+{
+    FILE *fp;
+    static char *line = NULL;
+    static size_t len = 0;
+
+    char *cgroup;
+    static char cgroup_memory_stat_path[PATH_MAX];
+
+    fp = fopen("/proc/self/status", "r");
+    if(!fp) {
+        die("unable to open /proc/self/status for reading: %s", strerror(errno));
+    }
+
+    while((getline(&line, &len, fp)) != -1) {
+        if(has_prefix(line, "Vm") || has_prefix(line, "Rss")) {
+            convert_kb(line);
+            printf("%s", line);
+        }
+    }
+
+    if(!feof(fp)) {
+        die("unable to read from /proc/self/status: %s", strerror(errno));
+    }
+
+    fclose(fp);
+
+    printf("---\n");
+
+    fp = fopen("/proc/meminfo", "r");
+    if(!fp) {
+        die("unable to open /proc/meminfo for reading: %s", strerror(errno));
+    }
+
+    while((getline(&line, &len, fp)) != -1) {
+        if(strcasestr(line, "active(file)")) {
+            convert_kb(line);
+            printf("%s", line);
+        }
+    }
+
+    if(!feof(fp)) {
+        die("unable to read from /proc/meminfo: %s", strerror(errno));
+    }
+
+    fclose(fp);
+
+    printf("---\n");
+
+    fp = fopen("/proc/self/cgroup", "r");
+    if(!fp) {
+        die("unable to open /proc/self/cgroup for reading: %s", strerror(errno));
+    }
+
+    getline(&line, &len, fp);
+
+    if(ferror(fp)) {
+        die("unable to read from /proc/self/cgroup: %s", strerror(errno));
+    }
+
+    fclose(fp);
+
+    cgroup = line;
+    cgroup = strchr(cgroup, ':') + 1;
+    cgroup = strchr(cgroup, ':') + 1;
+    assert(!strchr(cgroup, ':'));
+    if(cgroup[0] == '/') {
+        cgroup++;
+    }
+    assert(cgroup[strlen(cgroup)-1] == '\n');
+    cgroup[strlen(cgroup)-1] = '\0';
+
+    snprintf(cgroup_memory_stat_path, sizeof(cgroup_memory_stat_path), "/sys/fs/cgroup/%s/memory.stat", cgroup);
+
+    fp = fopen(cgroup_memory_stat_path, "r");
+    if(!fp) {
+        die("unable to open %s for reading: %s", cgroup_memory_stat_path, strerror(errno));
+    }
+
+    while((getline(&line, &len, fp)) != -1) {
+        if(strcasestr(line, "active_file")) {
+            convert_bytes(line);
+            printf("%s", line);
+        }
+    }
+
+    if(!feof(fp)) {
+        die("unable to read from %s: %s", cgroup_memory_stat_path, strerror(errno));
+    }
+
+    fclose(fp);
+
+    printf("---\n");
+
+    system("free -m");
+
+    printf("\n");
+
+    free(line);
+}
+
+static void
+populate_fs_cache_regular_io(int bytes_to_read, int dump_interval, int argc, char **argv)
+{
+    int i;
+    char buf[8192];
+
+    long bytes_read_in       = 0;
+    long total_bytes_read_in = 0;
+
+    for(i = 0; i < argc; i++) {
+        int fd;
+        ssize_t nbytes;
+
+        fd = open(argv[i], O_RDONLY);
+        if(fd == -1) {
+            die("unable to open %s for reading: %s", argv[i], strerror(errno));
+        }
+        while((nbytes = read(fd, buf, sizeof(buf))) && nbytes > 0) {
+            bytes_read_in += nbytes;
+            total_bytes_read_in += nbytes;
+
+            if(bytes_read_in > dump_interval) {
+                print_memory_report();
+                bytes_read_in -= dump_interval;
+            }
+
+            if(total_bytes_read_in > bytes_to_read) {
+                break;
+            }
+        }
+        if(nbytes == -1) {
+            die("unable to read from %s: %s", argv[i], strerror(errno));
+        }
+        close(fd);
+
+        if(total_bytes_read_in > bytes_to_read) {
+            break;
+        }
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -195,6 +434,8 @@ main(int argc, char **argv)
     }
 
     // XXX drop caches
+
+    populate_fs_cache_regular_io(bytes_to_read, dump_interval, argc - optind, argv + optind);
     
     return 0;
 }
