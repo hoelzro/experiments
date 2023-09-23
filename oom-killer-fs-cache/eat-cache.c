@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include <sys/mman.h>
+#include <sys/stat.h>
 
 // how many inactive files to keep open if mmap'ing
 // include smaps in memory stat output?
@@ -23,6 +24,7 @@
 #define SLEEP_TIME_OPTION    's'
 
 #define GIBIBYTE (1 << 30)
+#define PAGE_SIZE 4096
 
 #define die(fmt, args...)\
     fprintf(stderr, fmt "\n", ##args);\
@@ -370,6 +372,71 @@ populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long lon
     assert(total_bytes_read_in >= bytes_to_read);
 }
 
+static void
+populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump_interval, int argc, char **argv)
+{
+    int i;
+    int status;
+
+    unsigned long long bytes_read_in       = 0;
+    unsigned long long total_bytes_read_in = 0;
+
+    for(i = 0; i < argc; i++) {
+        int fd;
+        char *map;
+        size_t map_len;
+        struct stat s;
+        unsigned long long j;
+
+        fd = open(argv[i], O_RDONLY);
+        if(fd == -1) {
+            die("unable to open %s for reading: %s", argv[i], strerror(errno));
+        }
+
+        status = fstat(fd, &s);
+        if(status) {
+            die("unable to stat %s: %s", argv[i], strerror(errno));
+        }
+
+        map_len = s.st_size;
+        if((map_len % PAGE_SIZE) != 0) {
+            map_len += PAGE_SIZE - (map_len % PAGE_SIZE);
+        }
+
+        map = mmap(NULL, map_len, PROT_READ, MAP_PRIVATE, fd, 0);
+        if(map == MAP_FAILED) {
+            die("unable to mmap %s: %s", argv[i], strerror(errno));
+        }
+
+        for(j = 0; j < s.st_size; j++) {
+            status = map[j]; // XXX can I guarantee this doesn't get optimized out?
+            bytes_read_in++;
+            total_bytes_read_in++;
+
+            if(bytes_read_in >= dump_interval) {
+                print_memory_report();
+                bytes_read_in -= dump_interval;
+            }
+
+            if(total_bytes_read_in >= bytes_to_read) {
+                break;
+            }
+        }
+
+        status = munmap(map, map_len);
+        if(status) {
+            die("unable to munmap %s: %s", argv[i], strerror(errno));
+        }
+        close(fd);
+
+        if(total_bytes_read_in >= bytes_to_read) {
+            break;
+        }
+    }
+
+    assert(total_bytes_read_in >= bytes_to_read);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -432,7 +499,11 @@ main(int argc, char **argv)
 
     // XXX drop caches
 
-    populate_fs_cache_regular_io(bytes_to_read, dump_interval, argc - optind, argv + optind);
+    if(use_mmap) {
+        populate_fs_cache_mmap(bytes_to_read, dump_interval, argc - optind, argv + optind);
+    } else {
+        populate_fs_cache_regular_io(bytes_to_read, dump_interval, argc - optind, argv + optind);
+    }
     
     return 0;
 }
