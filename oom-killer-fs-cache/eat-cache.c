@@ -147,7 +147,7 @@ has_prefix(const char *s, const char *prefix)
 }
 
 static void
-convert_kb(char *line)
+convert_kb(char *line, size_t n)
 {
     char *p;
     long kb;
@@ -175,7 +175,7 @@ convert_kb(char *line)
 
     kb = strtol(p, NULL, 10);
 
-    remaining_space = strlen(line) + 1 - (p - line);
+    remaining_space = n - (p - line);
     bytes_written = snprintf(p, remaining_space, "%.2f mB\n", kb / 1024.0);
 
     if(bytes_written >= remaining_space) {
@@ -244,7 +244,7 @@ print_memory_report(void)
 
     while((getline(&line, &len, fp)) != -1) {
         if(has_prefix(line, "Vm") || has_prefix(line, "Rss")) {
-            convert_kb(line);
+            convert_kb(line, len);
             printf("%s", line);
         }
     }
@@ -264,7 +264,7 @@ print_memory_report(void)
 
     while((getline(&line, &len, fp)) != -1) {
         if(strcasestr(line, "active(file)")) {
-            convert_kb(line);
+            convert_kb(line, len);
             printf("%s", line);
         }
     }
