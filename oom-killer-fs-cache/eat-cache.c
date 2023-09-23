@@ -328,8 +328,6 @@ print_memory_report(void)
     system("free -m");
 
     printf("\n");
-
-    free(line);
 }
 
 static void
