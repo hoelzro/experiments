@@ -54,14 +54,14 @@ struct byte_unit units[] = {
     { "", 1 },
 };
 
-static long
-parse_bytes(const char *s, long *out)
+static int
+parse_bytes(const char *s, unsigned long long *out)
 {
     char *end;
     long mult = -1;
     int i;
 
-    *out = strtol(s, &end, 10);
+    *out = strtoull(s, &end, 10);
     if(end == s) {
         return -1;
     }
@@ -333,13 +333,13 @@ print_memory_report(void)
 }
 
 static void
-populate_fs_cache_regular_io(int bytes_to_read, int dump_interval, int argc, char **argv)
+populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long long dump_interval, int argc, char **argv)
 {
     int i;
     char buf[8192];
 
-    long bytes_read_in       = 0;
-    long total_bytes_read_in = 0;
+    unsigned long long bytes_read_in       = 0;
+    unsigned long long total_bytes_read_in = 0;
 
     for(i = 0; i < argc; i++) {
         int fd;
@@ -379,13 +379,13 @@ main(int argc, char **argv)
     int opt;
     int status;
 
-    long bytes_to_read  = 0;
-    long bytes_to_alloc = 0;
-    int use_mmap        = 0;
-    long mmap_limit     = 0;
-    int madvise_flag    = MADV_NORMAL;
-    int dump_interval   = GIBIBYTE;
-    int sleep_time      = 0;
+    unsigned long long bytes_to_read  = 0;
+    unsigned long long bytes_to_alloc = 0;
+    int use_mmap                      = 0;
+    unsigned long long mmap_limit     = 0;
+    int madvise_flag                  = MADV_NORMAL;
+    unsigned long long dump_interval  = GIBIBYTE;
+    int sleep_time                    = 0;
 
     while((opt = getopt_long(argc, argv, "", options, NULL)) != -1) {
         switch(opt) {
