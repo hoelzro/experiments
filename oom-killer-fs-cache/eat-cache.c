@@ -358,7 +358,7 @@ populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long lon
                 bytes_read_in -= dump_interval;
             }
 
-            if(total_bytes_read_in > bytes_to_read) {
+            if(total_bytes_read_in >= bytes_to_read) {
                 break;
             }
         }
@@ -367,10 +367,12 @@ populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long lon
         }
         close(fd);
 
-        if(total_bytes_read_in > bytes_to_read) {
+        if(total_bytes_read_in >= bytes_to_read) {
             break;
         }
     }
+
+    assert(total_bytes_read_in >= bytes_to_read);
 }
 
 int
