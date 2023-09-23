@@ -350,7 +350,7 @@ populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long lon
             bytes_read_in += nbytes;
             total_bytes_read_in += nbytes;
 
-            if(bytes_read_in > dump_interval) {
+            if(bytes_read_in >= dump_interval) {
                 print_memory_report();
                 bytes_read_in -= dump_interval;
             }
