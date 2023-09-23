@@ -508,6 +508,10 @@ main(int argc, char **argv)
     } else {
         populate_fs_cache_regular_io(bytes_to_read, dump_interval, argc - optind, argv + optind);
     }
+
+    if(sleep_time) {
+        sleep(sleep_time);
+    }
     
     return 0;
 }
