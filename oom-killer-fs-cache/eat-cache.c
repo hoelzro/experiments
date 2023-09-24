@@ -479,6 +479,30 @@ populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump
 }
 
 static void
+eat_anon_memory(unsigned long long bytes_to_alloc, unsigned long long dump_interval)
+{
+    unsigned long long bytes_allocated = 0;
+    unsigned long long total_bytes_allocated = 0;
+
+    while(total_bytes_allocated < bytes_to_alloc) {
+        char *buf;
+        int i;
+
+        buf = malloc(134217728);
+        for(i = 0; i < 134217728; i += PAGE_SIZE) {
+            buf[i] = 1;
+        }
+
+        bytes_allocated += 134217728;
+        total_bytes_allocated += 134217728;
+        if(bytes_allocated >= dump_interval) {
+            print_memory_report();
+            bytes_allocated -= dump_interval;
+        }
+    }
+}
+
+static void
 drop_caches(void)
 {
     FILE *fp;
@@ -564,6 +588,8 @@ main(int argc, char **argv)
     } else {
         populate_fs_cache_regular_io(bytes_to_read, dump_interval, fadvise_flag, argc - optind, argv + optind);
     }
+
+    eat_anon_memory(bytes_to_alloc, dump_interval);
 
     if(sleep_time) {
         sleep(sleep_time);
