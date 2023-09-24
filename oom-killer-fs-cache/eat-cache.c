@@ -478,6 +478,18 @@ populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump
     assert(total_bytes_read_in >= bytes_to_read);
 }
 
+static void
+drop_caches(void)
+{
+    FILE *fp;
+    fp = fopen("/proc/sys/vm/drop_caches", "w");
+    if(!fp) {
+        die("unable to drop caches");
+    }
+    fputs("1\n", fp);
+    fclose(fp);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -545,7 +557,7 @@ main(int argc, char **argv)
         }
     }
 
-    // XXX drop caches
+    drop_caches();
 
     if(use_mmap) {
         populate_fs_cache_mmap(bytes_to_read, dump_interval, fadvise_flag, madvise_flag, mmap_limit, argc - optind, argv + optind);
