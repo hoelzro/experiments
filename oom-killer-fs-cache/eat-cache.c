@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,6 +24,7 @@
 #define FADVISE_OPTION       'v'
 #define DUMP_INTERVAL_OPTION 'i'
 #define SLEEP_TIME_OPTION    's'
+#define MONITOR_OPTION       'o'
 
 #define GIBIBYTE (1 << 30)
 #define PAGE_SIZE 4096
@@ -40,6 +42,7 @@ static struct option options[] = {
     { .name = "madvise",       .has_arg = required_argument, .val = MADVISE_OPTION },
     { .name = "dump-interval", .has_arg = required_argument, .val = DUMP_INTERVAL_OPTION },
     { .name = "sleep-time",    .has_arg = required_argument, .val = SLEEP_TIME_OPTION },
+    { .name = "monitor",       .has_arg = required_argument, .val = MONITOR_OPTION },
     { NULL },
 };
 
@@ -250,18 +253,19 @@ convert_bytes(char *line, size_t n)
 }
 
 static void
-print_memory_report(void)
+print_memory_report(pid_t target)
 {
     FILE *fp;
     static char *line = NULL;
     static size_t len = 0;
 
     char *cgroup;
-    static char cgroup_memory_stat_path[PATH_MAX];
+    static char path[PATH_MAX];
 
-    fp = fopen("/proc/self/status", "r");
+    sprintf(path, "/proc/%d/status", target);
+    fp = fopen(path, "r");
     if(!fp) {
-        die("unable to open /proc/self/status for reading: %s", strerror(errno));
+        die("unable to open %s for reading: %s", path, strerror(errno));
     }
 
     while((getline(&line, &len, fp)) != -1) {
@@ -272,7 +276,7 @@ print_memory_report(void)
     }
 
     if(!feof(fp)) {
-        die("unable to read from /proc/self/status: %s", strerror(errno));
+        die("unable to read from %s: %s", path, strerror(errno));
     }
 
     fclose(fp);
@@ -299,15 +303,16 @@ print_memory_report(void)
 
     printf("---\n");
 
-    fp = fopen("/proc/self/cgroup", "r");
+    sprintf(path, "/proc/%d/cgroup", target);
+    fp = fopen(path, "r");
     if(!fp) {
-        die("unable to open /proc/self/cgroup for reading: %s", strerror(errno));
+        die("unable to open %s for reading: %s", path, strerror(errno));
     }
 
     getline(&line, &len, fp);
 
     if(ferror(fp)) {
-        die("unable to read from /proc/self/cgroup: %s", strerror(errno));
+        die("unable to read from %s: %s", path, strerror(errno));
     }
 
     fclose(fp);
@@ -322,11 +327,11 @@ print_memory_report(void)
     assert(cgroup[strlen(cgroup)-1] == '\n');
     cgroup[strlen(cgroup)-1] = '\0';
 
-    snprintf(cgroup_memory_stat_path, sizeof(cgroup_memory_stat_path), "/sys/fs/cgroup/%s/memory.stat", cgroup);
+    snprintf(path, sizeof(path), "/sys/fs/cgroup/%s/memory.stat", cgroup);
 
-    fp = fopen(cgroup_memory_stat_path, "r");
+    fp = fopen(path, "r");
     if(!fp) {
-        die("unable to open %s for reading: %s", cgroup_memory_stat_path, strerror(errno));
+        die("unable to open %s for reading: %s", path, strerror(errno));
     }
 
     while((getline(&line, &len, fp)) != -1) {
@@ -337,7 +342,7 @@ print_memory_report(void)
     }
 
     if(!feof(fp)) {
-        die("unable to read from %s: %s", cgroup_memory_stat_path, strerror(errno));
+        die("unable to read from %s: %s", path, strerror(errno));
     }
 
     fclose(fp);
@@ -379,7 +384,7 @@ populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long lon
             total_bytes_read_in += nbytes;
 
             if(bytes_read_in >= dump_interval) {
-                print_memory_report();
+                print_memory_report(getpid());
                 bytes_read_in -= dump_interval;
             }
 
@@ -456,7 +461,7 @@ populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump
             total_bytes_read_in++;
 
             if(bytes_read_in >= dump_interval) {
-                print_memory_report();
+                print_memory_report(getpid());
                 bytes_read_in -= dump_interval;
             }
 
@@ -497,7 +502,7 @@ eat_anon_memory(unsigned long long bytes_to_alloc, unsigned long long dump_inter
         bytes_allocated += 134217728;
         total_bytes_allocated += 134217728;
         if(bytes_allocated >= dump_interval) {
-            print_memory_report();
+            print_memory_report(getpid());
             bytes_allocated -= dump_interval;
         }
     }
@@ -529,6 +534,7 @@ main(int argc, char **argv)
     int madvise_flag                  = MADV_NORMAL;
     unsigned long long dump_interval  = GIBIBYTE;
     int sleep_time                    = 0;
+    pid_t monitor_target              = 0;
 
     while((opt = getopt_long(argc, argv, "", options, NULL)) != -1) {
         switch(opt) {
@@ -577,9 +583,30 @@ main(int argc, char **argv)
             case USE_MMAP_OPTION:
                 use_mmap = 1;
                 break;
+            case MONITOR_OPTION:
+                monitor_target = strtol(optarg, NULL, 10);
+                if(monitor_target == 0) {
+                    die("unable to parse pid for --monitor");
+                }
+                break;
             default:
                 die("usage: %s", argv[0]);
         }
+    }
+
+    if(monitor_target) {
+        if(!sleep_time) {
+            sleep_time = 10;
+        }
+
+        while(kill(monitor_target, 0) == 0) {
+            print_memory_report(monitor_target);
+            sleep(sleep_time);
+        }
+        if(errno != ESRCH) {
+            die("unable to send signal to monitor target: %s", strerror(errno));
+        }
+        return 0;
     }
 
     drop_caches();
