@@ -350,9 +350,10 @@ print_memory_report(void)
 }
 
 static void
-populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long long dump_interval, int argc, char **argv)
+populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long long dump_interval, int fadvice, int argc, char **argv)
 {
     int i;
+    int status;
     char buf[8192];
 
     unsigned long long bytes_read_in       = 0;
@@ -366,6 +367,12 @@ populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long lon
         if(fd == -1) {
             die("unable to open %s for reading: %s", argv[i], strerror(errno));
         }
+
+        status = posix_fadvise(fd, 0, 0, fadvice);
+        if(status) {
+            die("unable to fadvise %s: %s", argv[i], strerror(errno));
+        }
+
         while((nbytes = read(fd, buf, sizeof(buf))) && nbytes > 0) {
             bytes_read_in += nbytes;
             total_bytes_read_in += nbytes;
@@ -393,7 +400,7 @@ populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long lon
 }
 
 static void
-populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump_interval, unsigned long long mmap_limit, int argc, char **argv)
+populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump_interval, int fadvice, int madvice, unsigned long long mmap_limit, int argc, char **argv)
 {
     int i;
     int status;
@@ -413,6 +420,11 @@ populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump
             die("unable to open %s for reading: %s", argv[i], strerror(errno));
         }
 
+        status = posix_fadvise(fd, 0, 0, fadvice);
+        if(status) {
+            die("unable to fadvise %s: %s", argv[i], strerror(errno));
+        }
+
         status = fstat(fd, &s);
         if(status) {
             die("unable to stat %s: %s", argv[i], strerror(errno));
@@ -430,6 +442,11 @@ populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump
         map = mmap(NULL, map_len, PROT_READ, MAP_PRIVATE, fd, 0);
         if(map == MAP_FAILED) {
             die("unable to mmap %s: %s", argv[i], strerror(errno));
+        }
+
+        status = madvise(map, map_len, madvice);
+        if(status) {
+            die("unable to madvise %s: %s", argv[i], strerror(errno));
         }
 
         for(j = 0; j < map_len; j++) {
@@ -531,9 +548,9 @@ main(int argc, char **argv)
     // XXX drop caches
 
     if(use_mmap) {
-        populate_fs_cache_mmap(bytes_to_read, dump_interval, mmap_limit, argc - optind, argv + optind);
+        populate_fs_cache_mmap(bytes_to_read, dump_interval, fadvise_flag, madvise_flag, mmap_limit, argc - optind, argv + optind);
     } else {
-        populate_fs_cache_regular_io(bytes_to_read, dump_interval, argc - optind, argv + optind);
+        populate_fs_cache_regular_io(bytes_to_read, dump_interval, fadvise_flag, argc - optind, argv + optind);
     }
 
     if(sleep_time) {
