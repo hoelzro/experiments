@@ -344,6 +344,7 @@ print_memory_report(void)
 
     printf("---\n");
 
+    fflush(stdout);
     system("free -m");
 
     printf("\n");
