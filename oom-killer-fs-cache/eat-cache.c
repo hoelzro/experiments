@@ -370,7 +370,7 @@ populate_fs_cache_regular_io(unsigned long long bytes_to_read, unsigned long lon
 
         status = posix_fadvise(fd, 0, 0, fadvice);
         if(status) {
-            die("unable to fadvise %s: %s", argv[i], strerror(errno));
+            die("unable to fadvise %s: %s", argv[i], strerror(status));
         }
 
         while((nbytes = read(fd, buf, sizeof(buf))) && nbytes > 0) {
@@ -422,7 +422,7 @@ populate_fs_cache_mmap(unsigned long long bytes_to_read, unsigned long long dump
 
         status = posix_fadvise(fd, 0, 0, fadvice);
         if(status) {
-            die("unable to fadvise %s: %s", argv[i], strerror(errno));
+            die("unable to fadvise %s: %s", argv[i], strerror(status));
         }
 
         status = fstat(fd, &s);
