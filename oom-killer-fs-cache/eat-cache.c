@@ -43,9 +43,6 @@ static struct option options[] = {
     { NULL },
 };
 
-#define NYI()\
-    die("%s NYI", __FUNCTION__);
-
 struct byte_unit {
     char *suffix;
     long mult;
