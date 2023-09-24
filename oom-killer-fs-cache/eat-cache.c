@@ -20,6 +20,7 @@
 #define USE_MMAP_OPTION      'm'
 #define MMAP_LIMIT_OPTION    'l'
 #define MADVISE_OPTION       'd'
+#define FADVISE_OPTION       'v'
 #define DUMP_INTERVAL_OPTION 'i'
 #define SLEEP_TIME_OPTION    's'
 
@@ -35,6 +36,7 @@ static struct option options[] = {
     { .name = "alloc-bytes",   .has_arg = required_argument, .val = ANON_BYTES_OPTION },
     { .name = "mmap",          .has_arg = no_argument,       .val = USE_MMAP_OPTION },
     { .name = "mmap-limit",    .has_arg = required_argument, .val = MMAP_LIMIT_OPTION },
+    { .name = "fadvise",       .has_arg = required_argument, .val = FADVISE_OPTION },
     { .name = "madvise",       .has_arg = required_argument, .val = MADVISE_OPTION },
     { .name = "dump-interval", .has_arg = required_argument, .val = DUMP_INTERVAL_OPTION },
     { .name = "sleep-time",    .has_arg = required_argument, .val = SLEEP_TIME_OPTION },
@@ -81,6 +83,27 @@ parse_bytes(const char *s, unsigned long long *out)
 
     *out *= mult;
     return 0;
+}
+
+static int
+parse_fadvise(const char *s, int *out)
+{
+#define HANDLE(flag_value)\
+    if(!strcmp(s, #flag_value)) {\
+        *out = flag_value;\
+        return 0;\
+    }
+
+    HANDLE(POSIX_FADV_NORMAL);
+    HANDLE(POSIX_FADV_RANDOM);
+    HANDLE(POSIX_FADV_SEQUENTIAL);
+    HANDLE(POSIX_FADV_WILLNEED);
+    HANDLE(POSIX_FADV_DONTNEED);
+    HANDLE(POSIX_FADV_NOREUSE);
+
+#undef HANDLE
+
+    return -1;
 }
 
 static int
@@ -451,6 +474,7 @@ main(int argc, char **argv)
     unsigned long long bytes_to_alloc = 0;
     int use_mmap                      = 0;
     unsigned long long mmap_limit     = 0;
+    int fadvise_flag                  = POSIX_FADV_NORMAL;
     int madvise_flag                  = MADV_NORMAL;
     unsigned long long dump_interval  = GIBIBYTE;
     int sleep_time                    = 0;
@@ -473,6 +497,12 @@ main(int argc, char **argv)
                 status = parse_bytes(optarg, &mmap_limit);
                 if(status != 0) {
                     die("unable to parse bytes for --mmap-limit");
+                }
+                break;
+            case FADVISE_OPTION:
+                status = parse_fadvise(optarg, &fadvise_flag);
+                if(status != 0) {
+                    die("unable to parse flag for --fadvise");
                 }
                 break;
             case MADVISE_OPTION:
