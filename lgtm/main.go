@@ -8,6 +8,8 @@ import (
 	"time"
 
 	_ "net/http/pprof"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type position struct {
@@ -243,6 +245,7 @@ func generatePuzzle() {
 }
 
 func main() {
+	http.Handle("/metrics", promhttp.Handler())
 	go func() {
 		log.Println(http.ListenAndServe(":6060", nil))
 	}()
