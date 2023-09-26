@@ -8,7 +8,12 @@ rules:
   nonResourceURLs:
   - '/metrics*'
 - apiGroups: ['']
-  resources: ['nodes', 'nodes/metrics']
+  resources:
+  - endpoints
+  - nodes
+  - nodes/metrics
+  - pods
+  - services
   verbs: ['get', 'list', 'watch']
 ---
 apiVersion: v1
