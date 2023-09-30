@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: loki
+  name: loki
+spec:
+  selector:
+    app.kubernetes.io/name: loki
+  ports:
+  - name: http
+    targetPort: 3100
+    port: 3100

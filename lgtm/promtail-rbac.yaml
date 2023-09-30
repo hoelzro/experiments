@@ -1,0 +1,32 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: promtail-scrape
+rules:
+- apiGroups: ['']
+  resources:
+  - endpoints
+  - nodes
+  - nodes/metrics
+  - pods
+  - services
+  verbs: ['get', 'list', 'watch']
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: loki
+  name: promtail
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: promtail-scrape
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: promtail-scrape
+subjects:
+- kind: ServiceAccount
+  namespace: loki
+  name: promtail
