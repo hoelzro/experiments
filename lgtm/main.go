@@ -245,6 +245,14 @@ func generatePuzzle() {
 }
 
 func main() {
+	logger := log.Default()
+	logger.SetFlags(logger.Flags() & ^log.LUTC)
+
+	chicagoTZ, err := time.LoadLocation("America/Chicago")
+	if err != nil {
+		panic(err)
+	}
+
 	http.Handle("/metrics", promhttp.Handler())
 	go func() {
 		log.Println(http.ListenAndServe(":6060", nil))
@@ -265,7 +273,7 @@ func main() {
 	for {
 		sleepTime := 30 + rand.Intn(270)
 
-		log.Printf("sleeping for %v seconds...", sleepTime)
+		log.Printf("sleeping for %v seconds... (until %s)", sleepTime, time.Now().In(chicagoTZ).Add(time.Duration(time.Second*time.Duration(sleepTime))).Format("15:04:05"))
 		time.Sleep(time.Second * time.Duration(sleepTime))
 
 		puzzleGenerationTime := 30 + rand.Intn(90)
