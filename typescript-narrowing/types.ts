@@ -1,0 +1,2 @@
+type StringOrNumber = string | number;
+
