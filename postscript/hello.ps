@@ -1,0 +1,21 @@
+%! simple Postscript "hello world"
+
+% draw a rectangle
+newpath
+200 200 moveto
+200 400 lineto
+400 400 lineto
+400 200 lineto
+200 200 lineto
+2 setlinewidth
+stroke
+
+% write some text
+/Times-Roman findfont
+12 scalefont
+setfont
+newpath
+200 500 moveto
+(Hello World) show
+
+showpage
