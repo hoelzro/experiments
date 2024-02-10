@@ -1,0 +1,97 @@
+%! draw an RxC grid
+
+% usage: cell_size row_num col_num drawcell
+/drawcell {
+  currentpoint
+
+  3 index
+  1 sub
+  5 index
+  mul
+
+  3 index
+  1 sub
+  6 index
+  mul
+
+  exch
+
+  rmoveto
+
+  % draw the left side
+  4 index
+  0 rlineto
+
+  % draw the top side
+  0
+  5 index
+  rlineto
+
+  % draw the right side
+  4 index
+  -1 mul
+  0 rlineto
+
+  % draw the bottom side
+  0
+  5 index
+  -1 mul
+  rlineto
+
+  % restore cursor position
+  moveto
+
+  % discard arguments
+  pop pop pop
+} def
+
+/eachcell {
+  % rotate num_cols and block to the bottom of the stack for later
+  count -2 roll
+
+  % iterate over num_rows
+  1 1
+  3 -1 roll
+  {
+    % grab num_cols from the bottom of the stack
+    count 1 sub index
+
+    % iterate over num_cols
+    1 1
+    3 -1 roll
+    {
+      % grab block from the bottom of the stack
+      count 2 sub index
+      exec
+
+      % clear col_num for the next iteration
+      pop
+    } for
+
+    % clear row_num for the next iteration
+    pop
+  } for
+
+  % remove num_cols and block from the bottom of the stack
+  count -2 roll pop pop
+} def
+
+% usage: num_rows num_cols cell_size 
+/drawgrid {  
+  % move arguments into place for eachcell
+  3 1 roll 
+
+  { % stack: cell_size row_num col_num
+    3 copy
+    drawcell
+  } eachcell
+
+  % discard cell_size argument
+  pop
+} def
+
+newpath
+50 50 moveto
+5 5 20 drawgrid
+2 setlinewidth
+stroke
