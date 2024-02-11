@@ -1,0 +1,69 @@
+%! draw a cell with potentially missing walls
+
+% usage: walls cell_size row_num col_num drawcell
+/drawcell {
+  currentpoint
+
+  3 index
+  1 sub
+  5 index
+  mul
+
+  3 index
+  1 sub
+  6 index
+  mul
+
+  exch
+
+  rmoveto
+
+  % draw the bottom side
+  5 index /south known { 5 index /south get } { false } ifelse
+  5 index
+  0
+  3 -1 roll
+  { rlineto }
+  { rmoveto }
+  ifelse
+
+  % draw the right side
+  5 index /east known { 5 index /east get } { false } ifelse
+  0
+  6 index
+  3 -1 roll
+  { rlineto }
+  { rmoveto }
+  ifelse
+
+  % draw the top side
+  5 index /north known { 5 index /north get } { false } ifelse
+  5 index
+  -1 mul
+  0
+  3 -1 roll
+  { rlineto }
+  { rmoveto }
+  ifelse
+
+  % draw the left side
+  5 index /west known { 5 index /west get } { false } ifelse
+  0
+  6 index
+  -1 mul
+  3 -1 roll
+  { rlineto }
+  { rmoveto }
+  ifelse
+
+  % restore cursor position
+  moveto
+
+  % discard arguments
+  pop pop pop
+} def
+
+newpath
+50 50 moveto
+<< /south true /west true /east true >> 20 1 1 drawcell
+stroke
