@@ -171,42 +171,27 @@ def op_count(i):
     i.operand_stack.append(IntegerValue(value=len(i.operand_stack)))
 
 def op_def(i):
-    # make sure we have enough arguments
-    assert len(i.operand_stack) >= 2, 'operand stack underflow'
+    name, value = i.check_arity(NameValue, Value)
 
-    # XXX type checks
-
-    value = i.operand_stack.pop()
-    name = i.operand_stack.pop().value
-
-    i.dictionary_stack[name] = value
+    i.dictionary_stack[name.value] = value
 
 def op_exec(i):
-    # make sure we have enough arguments
-    assert len(i.operand_stack) >= 1, 'operand stack underflow'
-
-    fn = i.operand_stack.pop()
+    fn, = i.check_arity(ArrayValue)
 
     fn.execute(i, direct=False)
 
 def op_for(i):
-    assert len(i.operand_stack) >= 4, 'operand stack underflow'
+    init, incr, limit, fn = i.check_arity(IntegerValue, IntegerValue, IntegerValue, ArrayValue)
 
-    fn = i.operand_stack.pop()
-    limit = i.operand_stack.pop().value
-    incr = i.operand_stack.pop().value
-    init = i.operand_stack.pop().value
-
-    for j in range(init, limit+1, incr):
+    for j in range(init.value, limit.value+1, incr.value):
         i.operand_stack.append(IntegerValue(
             value=j,
         ))
         fn.execute(i, direct=False)
 
 def op_index(i):
-    assert len(i.operand_stack) >= 1, 'operand stack underflow'
-
-    idx = i.operand_stack.pop().value
+    idx, = i.check_arity(IntegerValue)
+    idx = idx.value
 
     assert idx >= 0
 
@@ -218,28 +203,22 @@ def op_pop(i):
     i.operand_stack.pop()
 
 def op_print(i):
-    assert len(i.operand_stack) > 0, 'operand stack underflow'
-
-    v = i.operand_stack.pop()
+    v, = i.check_arity(Value)
     print(v.__ps_str__())
 
 def op_pstack(i):
     for v in reversed(i.operand_stack):
         print(v.__ps_repr__())
 
-# XXX annotations for arity/types?
 def op_roll(i):
     # make sure we have enough arguments
     assert len(i.operand_stack) >= 2, 'operand stack underflow'
-
-    # XXX type checks
 
     # make sure we have at least as many stack elements as the first argument
     # asks for, after removing the arguments
     assert len(i.operand_stack) - 2 >= i.operand_stack[-2].value, 'operand stack underflow'
 
-    j = i.operand_stack.pop().value
-    n = i.operand_stack.pop().value
+    n, j = (v.value for v in i.check_arity(IntegerValue, IntegerValue))
 
     assert n > 0
 
@@ -257,15 +236,10 @@ def op_roll(i):
     i.operand_stack.extend(window)
 
 def op_sub(i):
-    assert len(i.operand_stack) >= 2, 'operand stack underflow'
-
-    # XXX type checks?
-
-    rhs = i.operand_stack.pop().value
-    lhs = i.operand_stack.pop().value
+    lhs, rhs = i.check_arity(IntegerValue, IntegerValue)
 
     i.operand_stack.append(IntegerValue(
-        value=lhs - rhs,
+        value=lhs.value - rhs.value,
     ))
 
 core_vocabulary = {
@@ -292,6 +266,13 @@ class Interpreter:
 
     def look_up(self, name):
         return self.dictionary_stack[name]
+
+    def check_arity(self, *signature):
+        assert len(self.operand_stack) >= len(signature), 'operand stack underflow'
+        for expected_type, arg in zip(reversed(signature), reversed(self.operand_stack)):
+            assert isinstance(arg, expected_type), f'got {type(arg).__name__}, expected {expected_type.__name__}'
+
+        return reversed([ self.operand_stack.pop() for _ in signature ])
 
     def execute(self, program):
         f = Frame(program)
