@@ -17,8 +17,8 @@ class Value:
     value: any # please override this in subclasses
 
     executable: bool = False
-    line: int = -1 # XXX for now
-    column: int = -1 # XXX for now
+    line: Optional[int] = None
+    column: Optional[int] = None
 
     tag: Optional[str] = None
     predecessor: Optional[Self] = None
@@ -119,14 +119,18 @@ class Scanner:
         self.lines = lines
 
     def __iter__(self):
-        for line in self.lines:
+        for line_no, line in enumerate(self.lines, start=1):
             line = line.rstrip()
 
             if (idx := line.find('%')) != -1:
                 line = line[:idx]
 
+            col_no = 1
+
             while True:
-                line = line.lstrip()
+                stripped = line.lstrip()
+                col_no += len(line) - len(stripped)
+                line = stripped
                 if line == '':
                     break
 
@@ -134,36 +138,43 @@ class Scanner:
                     idx = 1
                     while idx < len(line) and line[idx].isalpha():
                         idx += 1
-                    yield NameValue(value=line[1:idx])
+                    yield NameValue(value=line[1:idx], line=line_no, column=col_no)
                     line = line[idx:]
+                    col_no += idx
                 elif line[0] == '{':
                     assert len(line) == 1 or line[1].isspace()
-                    yield StartProcValue()
+                    yield StartProcValue(line=line_no, column=col_no)
                     line = line[1:]
+                    col_no += 1
                 elif line[0] == '}':
                     assert len(line) == 1 or line[1].isspace()
-                    yield EndProcValue()
+                    yield EndProcValue(line=line_no, column=col_no)
                     line = line[1:]
+                    col_no += 1
                 elif line[0].isalpha():
                     idx = 1
                     while idx < len(line) and line[idx].isalpha():
                         idx += 1
-                    yield NameValue(value=line[:idx], executable=True)
+                    yield NameValue(value=line[:idx], line=line_no, column=col_no, executable=True)
                     line = line[idx:]
+                    col_no += idx
                 elif (line[0] == '-' and line[1].isdigit()) or line[0].isdigit():
                     idx = 1
                     while idx < len(line) and line[idx].isdigit():
                         idx += 1
-                    yield IntegerValue(value=int(line[:idx]))
+                    yield IntegerValue(value=int(line[:idx]), line=line_no, column=col_no)
                     line = line[idx:]
+                    col_no += idx
                 elif line[0] == '(':
                     idx = line.index(')')
-                    yield StringValue(value=line[1:idx])
+                    yield StringValue(value=line[1:idx], line=line_no, column=col_no)
                     line = line[idx+1:]
+                    col_no += idx + 1
                 elif line[0] == '=':
                     assert len(line) == 1 or line[1].isspace()
-                    yield NameValue(value='=', executable=True)
+                    yield NameValue(value='=', line=line_no, column=col_no, executable=True)
                     line = line[1:]
+                    col_no += 1
                 else:
                     raise NotImplementedError(f"can't handle rest of line {line!r}")
 
