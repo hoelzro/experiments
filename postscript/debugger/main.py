@@ -1,5 +1,6 @@
 from collections import deque, ChainMap
 from dataclasses import dataclass
+import inspect
 
 from typing import Optional, Self
 
@@ -54,9 +55,9 @@ class NameValue(Value):
 
             # XXX is this how I want to dispatch on values vs functions implementing operators?
             if hasattr(c, 'execute'):
-                c.execute(i, direct=False)
+                return c.execute(i, direct=False)
             else:
-                c(i)
+                return c(i)
         else:
             # executing a literal name appends the name to the operand stack (XXX can I just append(self)?)
             # XXX I *think* it should be ok just to push ourselves onto the stack?
@@ -83,7 +84,7 @@ class ArrayValue(Value):
     def execute(self, i, direct):
         if self.executable and not direct:
             # executing an executable array…executes it
-            i.execute(self)
+            return i.execute(self)
         else:
             # executing a literal array just pushes it onto the stack
             # XXX I *think* it should be ok just to push ourselves onto the stack?
@@ -189,7 +190,7 @@ def op_def(i):
 def op_exec(i):
     fn, = i.check_arity(ArrayValue)
 
-    fn.execute(i, direct=False)
+    return fn.execute(i, direct=False)
 
 def op_for(i):
     init, incr, limit, fn = i.check_arity(IntegerValue, IntegerValue, IntegerValue, ArrayValue)
@@ -198,7 +199,9 @@ def op_for(i):
         i.operand_stack.append(IntegerValue(
             value=j,
         ))
-        fn.execute(i, direct=False)
+        maybe_gen = fn.execute(i, direct=False)
+        if inspect.isgenerator(maybe_gen):
+            yield from maybe_gen
 
 def op_index(i):
     idx, = i.check_arity(IntegerValue)
@@ -307,7 +310,11 @@ class Interpreter:
                     else:
                         self.operand_stack.append(word)
                 else:
-                    word.execute(self, direct=True)
+                    maybe_gen = word.execute(self, direct=True)
+                    if inspect.isgenerator(maybe_gen):
+                        yield from maybe_gen
+                    else:
+                        yield
         finally:
             self.execution_stack.pop()
         assert not self._is_building_executable_array() # XXX right?
@@ -316,4 +323,5 @@ if __name__ == '__main__':
     import sys
     with open(sys.argv[1], 'r') as f:
         i = Interpreter()
-        i.execute(Scanner(f))
+        for _ in i.execute(Scanner(f)):
+            print('got control back')
