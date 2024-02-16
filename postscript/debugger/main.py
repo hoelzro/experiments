@@ -394,6 +394,7 @@ class DebuggerApp(App):
         self.stepper = self.interp.execute(Scanner(io.StringIO(source_code)))
 
         self.log_widget = Log(classes='output_pane')
+        self.log_widget.border_title = 'Output'
 
         # XXX this is such a hack
         self.interp.print = self.log_widget.write_line
@@ -401,8 +402,11 @@ class DebuggerApp(App):
         with Vertical():
             with Horizontal():
                 self.src = SourceCode(source_code, classes='box')
+                self.src.border_title = 'Code'
                 yield self.src
+
                 self.stack_widget = Static('', classes='box')
+                self.stack_widget.border_title = 'Stack'
                 yield self.stack_widget
             yield self.log_widget
         yield Footer()
