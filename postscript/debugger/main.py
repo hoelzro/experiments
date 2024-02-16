@@ -153,8 +153,20 @@ class Scanner:
         for line_no, line in enumerate(self.lines, start=1):
             line = line.rstrip()
 
+            tag = None
+            args = None
+
             if (idx := line.find('%')) != -1:
+                comment = line[idx+1:]
                 line = line[:idx]
+
+                while len(comment) > 0 and comment[0].isspace():
+                    comment = comment[1:comment]
+
+                if comment.startswith('tag '):
+                    tag = comment.removeprefix('tag ')
+                if comment.startswith('args '):
+                    args = comment.removeprefix('args ')
 
             col_no = 1
 
@@ -169,41 +181,41 @@ class Scanner:
                     idx = 1
                     while idx < len(line) and line[idx].isalpha():
                         idx += 1
-                    yield NameValue(value=line[1:idx], line=line_no, column=col_no, length=idx)
+                    yield NameValue(value=line[1:idx], line=line_no, column=col_no, length=idx, tag=tag)
                     line = line[idx:]
                     col_no += idx
                 elif line[0] == '{':
                     assert len(line) == 1 or line[1].isspace()
-                    yield StartProcValue(line=line_no, column=col_no, length=1)
+                    yield StartProcValue(line=line_no, column=col_no, length=1, tag=tag)
                     line = line[1:]
                     col_no += 1
                 elif line[0] == '}':
                     assert len(line) == 1 or line[1].isspace()
-                    yield EndProcValue(line=line_no, column=col_no, length=1)
+                    yield EndProcValue(line=line_no, column=col_no, length=1, tag=tag)
                     line = line[1:]
                     col_no += 1
                 elif line[0].isalpha():
                     idx = 1
                     while idx < len(line) and line[idx].isalpha():
                         idx += 1
-                    yield NameValue(value=line[:idx], line=line_no, column=col_no, length=idx, executable=True)
+                    yield NameValue(value=line[:idx], line=line_no, column=col_no, length=idx, tag=tag, executable=True)
                     line = line[idx:]
                     col_no += idx
                 elif (line[0] == '-' and line[1].isdigit()) or line[0].isdigit():
                     idx = 1
                     while idx < len(line) and line[idx].isdigit():
                         idx += 1
-                    yield IntegerValue(value=int(line[:idx]), line=line_no, column=col_no, length=idx)
+                    yield IntegerValue(value=int(line[:idx]), line=line_no, column=col_no, length=idx, tag=tag)
                     line = line[idx:]
                     col_no += idx
                 elif line[0] == '(':
                     idx = line.index(')')
-                    yield StringValue(value=line[1:idx], line=line_no, column=col_no, length=idx+1)
+                    yield StringValue(value=line[1:idx], line=line_no, column=col_no, length=idx+1, tag=tag)
                     line = line[idx+1:]
                     col_no += idx + 1
                 elif line[0] == '=':
                     assert len(line) == 1 or line[1].isspace()
-                    yield NameValue(value='=', line=line_no, column=col_no, length=1, executable=True)
+                    yield NameValue(value='=', line=line_no, column=col_no, length=1, tag=tag, executable=True)
                     line = line[1:]
                     col_no += 1
                 else:
@@ -419,7 +431,7 @@ class DebuggerApp(App):
         assert next_word.line is not None, repr(next_word)
         self.src.highlight(line=next_word.line, col_start=next_word.column, col_end=next_word.column+next_word.length)
         self.src.refresh()
-        stack_widget_lines = reversed([ v.__ps_repr__() for v in self.interp.operand_stack ])
+        stack_widget_lines = reversed([ v.__ps_repr__() + (f' [grey42]{v.tag}[/grey42]' if v.tag is not None else '') for v in self.interp.operand_stack ])
         self.stack_widget.update('\n'.join(stack_widget_lines))
 
 if __name__ == '__main__':
