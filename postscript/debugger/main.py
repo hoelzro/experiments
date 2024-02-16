@@ -310,11 +310,10 @@ class Interpreter:
                     else:
                         self.operand_stack.append(word)
                 else:
+                    yield word
                     maybe_gen = word.execute(self, direct=True)
                     if inspect.isgenerator(maybe_gen):
                         yield from maybe_gen
-                    else:
-                        yield
         finally:
             self.execution_stack.pop()
         assert not self._is_building_executable_array() # XXX right?
