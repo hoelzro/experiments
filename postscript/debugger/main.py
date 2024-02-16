@@ -380,7 +380,8 @@ class DebuggerApp(App):
             with Horizontal():
                 self.src = SourceCode(source_code, classes='box')
                 yield self.src
-                yield Static('Stack Pane', classes='box')
+                self.stack_widget = Static('', classes='box')
+                yield self.stack_widget
             yield self.log_widget
         yield Footer()
 
@@ -392,6 +393,8 @@ class DebuggerApp(App):
         assert next_word.line is not None, repr(next_word)
         self.src.highlight(line=next_word.line, col_start=next_word.column, col_end=next_word.column+next_word.length)
         self.src.refresh()
+        stack_widget_lines = reversed([ v.__ps_repr__() for v in self.interp.operand_stack ])
+        self.stack_widget.update('\n'.join(stack_widget_lines))
 
 if __name__ == '__main__':
     app = DebuggerApp()
