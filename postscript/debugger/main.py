@@ -27,6 +27,7 @@ class Value:
     executable: bool = False
     line: Optional[int] = None
     column: Optional[int] = None
+    length: Optional[int] = None
 
     tag: Optional[str] = None
     predecessor: Optional[Self] = None
@@ -146,41 +147,41 @@ class Scanner:
                     idx = 1
                     while idx < len(line) and line[idx].isalpha():
                         idx += 1
-                    yield NameValue(value=line[1:idx], line=line_no, column=col_no)
+                    yield NameValue(value=line[1:idx], line=line_no, column=col_no, length=idx)
                     line = line[idx:]
                     col_no += idx
                 elif line[0] == '{':
                     assert len(line) == 1 or line[1].isspace()
-                    yield StartProcValue(line=line_no, column=col_no)
+                    yield StartProcValue(line=line_no, column=col_no, length=1)
                     line = line[1:]
                     col_no += 1
                 elif line[0] == '}':
                     assert len(line) == 1 or line[1].isspace()
-                    yield EndProcValue(line=line_no, column=col_no)
+                    yield EndProcValue(line=line_no, column=col_no, length=1)
                     line = line[1:]
                     col_no += 1
                 elif line[0].isalpha():
                     idx = 1
                     while idx < len(line) and line[idx].isalpha():
                         idx += 1
-                    yield NameValue(value=line[:idx], line=line_no, column=col_no, executable=True)
+                    yield NameValue(value=line[:idx], line=line_no, column=col_no, length=idx, executable=True)
                     line = line[idx:]
                     col_no += idx
                 elif (line[0] == '-' and line[1].isdigit()) or line[0].isdigit():
                     idx = 1
                     while idx < len(line) and line[idx].isdigit():
                         idx += 1
-                    yield IntegerValue(value=int(line[:idx]), line=line_no, column=col_no)
+                    yield IntegerValue(value=int(line[:idx]), line=line_no, column=col_no, length=idx)
                     line = line[idx:]
                     col_no += idx
                 elif line[0] == '(':
                     idx = line.index(')')
-                    yield StringValue(value=line[1:idx], line=line_no, column=col_no)
+                    yield StringValue(value=line[1:idx], line=line_no, column=col_no, length=idx+1)
                     line = line[idx+1:]
                     col_no += idx + 1
                 elif line[0] == '=':
                     assert len(line) == 1 or line[1].isspace()
-                    yield NameValue(value='=', line=line_no, column=col_no, executable=True)
+                    yield NameValue(value='=', line=line_no, column=col_no, length=1, executable=True)
                     line = line[1:]
                     col_no += 1
                 else:
@@ -339,9 +340,9 @@ class SourceCode(Widget):
             lines[line_no - 1] = ''.join([
                 line[:col_start-1],
                 '[r]',
-                line[col_start-1:col_end],
+                line[col_start-1:col_end-1],
                 '[/r]',
-                line[col_end:],
+                line[col_end-1:],
             ])
 
         return '\n'.join(lines)
