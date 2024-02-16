@@ -309,11 +309,16 @@ class Interpreter:
                         array = []
                         while not isinstance(self.operand_stack[-1], StartProcValue):
                             array.append(self.operand_stack.pop())
+                        line = self.operand_stack[-1].line
+                        column = self.operand_stack[-1].column
                         self.operand_stack.pop() # pop the start proc
                         array.reverse()
                         self.operand_stack.append(ArrayValue(
                             value=array,
                             executable=True,
+                            line=line,
+                            column=column,
+                            length=1,
                         ))
                     else:
                         self.operand_stack.append(word)
