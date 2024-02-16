@@ -52,6 +52,12 @@ class MarkValue(Value):
         # XXX I *think* it should be ok just to push ourselves onto the stack?
         i.operand_stack.append(self)
 
+    def __ps_str__(self):
+        return '-mark-'
+
+    def __ps_repr__(self):
+        return '-mark-'
+
 @dataclass
 class NameValue(Value):
     value: str
@@ -78,6 +84,9 @@ class StringValue(Value):
     def execute(self, i, direct):
         i.operand_stack.append(self)
 
+    def __ps_repr__(self):
+        return '(' + self.value + ')'
+
 @dataclass
 class IntegerValue(Value):
     value: int
@@ -100,6 +109,19 @@ class ArrayValue(Value):
 
     def __iter__(self):
         return iter(self.value)
+
+    def __ps_str__(self):
+        return self.__ps_repr__()
+
+    def __ps_repr__(self):
+        pieces = []
+
+        pieces.append('{' if self.executable else '[')
+        for v in self.value:
+            pieces.append(v.__ps_repr__())
+        pieces.append('}' if self.executable else ']')
+
+        return ' '.join(pieces)
 
 # XXX these two classes are kinda weird
 @dataclass
