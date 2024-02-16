@@ -226,11 +226,11 @@ def op_pop(i):
 
 def op_print(i):
     v, = i.check_arity(Value)
-    print(v.__ps_str__())
+    i.print(v.__ps_str__())
 
 def op_pstack(i):
     for v in reversed(i.operand_stack):
-        print(v.__ps_repr__())
+        i.print(v.__ps_repr__())
 
 def op_roll(i):
     # make sure we have enough arguments
@@ -373,6 +373,9 @@ class DebuggerApp(App):
 
         self.log_widget = Log(classes='output_pane')
 
+        # XXX this is such a hack
+        self.interp.print = self.log_widget.write_line
+
         with Vertical():
             with Horizontal():
                 self.src = SourceCode(source_code, classes='box')
@@ -389,7 +392,6 @@ class DebuggerApp(App):
         assert next_word.line is not None, repr(next_word)
         self.src.highlight(line=next_word.line, col_start=next_word.column, col_end=next_word.column+next_word.length)
         self.src.refresh()
-        self.log_widget.write_line(str(next_word) + ' ' + str(self.src.highlight_pos))
 
 if __name__ == '__main__':
     app = DebuggerApp()
