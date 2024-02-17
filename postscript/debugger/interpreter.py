@@ -344,6 +344,7 @@ class Interpreter:
                             line=line,
                             column=column,
                             length=1,
+                            tag=word.tag,
                         ))
                     else:
                         self.operand_stack.append(word)
