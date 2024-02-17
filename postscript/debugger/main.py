@@ -71,7 +71,12 @@ class DebuggerApp(App):
         self.exit()
 
     def action_step(self):
-        next_word = next(self.stepper)
+        try:
+            next_word = next(self.stepper)
+        except StopIteration:
+            self.log_widget.write_line('\nProgram finished.')
+            return
+
         assert next_word.line is not None, repr(next_word)
         self.src.highlight(line=next_word.line, col_start=next_word.column, col_end=next_word.column+next_word.length)
         self.src.refresh()
