@@ -253,10 +253,8 @@ def op_for(i):
         if inspect.isgenerator(maybe_gen):
             yield from maybe_gen
 
-def op_index(i):
-    idx, = i.check_arity(IntegerValue)
-    idx = idx.value
-
+@postscript_function
+def op_index(i, idx: int):
     assert idx >= 0
 
     i.operand_stack.append(i.operand_stack[-1 - idx])
