@@ -42,3 +42,8 @@ def test_for():
     program = '1 1 4 { 1 sub } for'
     values = run_and_gather_stack(program)
     assert values == [0, 1, 2, 3]
+
+def test_exec():
+    program = '{ 3 } exec'
+    values = run_and_gather_stack(program)
+    assert values == [3]
