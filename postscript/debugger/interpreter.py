@@ -266,8 +266,8 @@ def op_pop(i):
 
     i.operand_stack.pop()
 
-def op_print(i):
-    v, = i.check_arity(Value)
+@postscript_function
+def op_print(i, v: Value):
     i.print(v.__ps_str__())
 
 def op_pstack(i):
