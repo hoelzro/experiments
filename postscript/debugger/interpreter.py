@@ -217,103 +217,6 @@ class Scanner:
                 else:
                     raise NotImplementedError(f"can't handle rest of line {line!r}")
 
-def postscript_function(fn):
-    # XXX the name != 'i' check is not ideal :(
-    expected_types = [ param.annotation for param in inspect.signature(fn).parameters.values() if param.name != 'i' ]
-
-    @functools.wraps(fn)
-    def wrapper(i):
-        args = i.check_arity(*expected_types)
-
-        return fn(i, *args)
-
-    return wrapper
-
-def op_count(i):
-    i.operand_stack.append(IntegerValue(value=len(i.operand_stack)))
-
-def op_def(i):
-    name, value = i.check_arity(NameValue, Value)
-
-    i.dictionary_stack[name.value] = value
-
-@postscript_function
-def op_exec(i, fn: ArrayValue):
-    return fn.execute(i, direct=False)
-
-@postscript_function
-def op_for(i, init: int, incr: int, limit: int, fn: ArrayValue):
-    for j in range(init, limit+1, incr):
-        i.operand_stack.append(IntegerValue(
-            value=j,
-        ))
-        maybe_gen = fn.execute(i, direct=False)
-        if inspect.isgenerator(maybe_gen):
-            yield from maybe_gen
-
-@postscript_function
-def op_index(i, idx: int):
-    assert idx >= 0
-
-    i.operand_stack.append(i.operand_stack[-1 - idx])
-
-def op_pop(i):
-    assert len(i.operand_stack) > 0, 'operand stack underflow'
-
-    i.operand_stack.pop()
-
-@postscript_function
-def op_print(i, v: Value):
-    i.print(v.__ps_str__())
-
-def op_pstack(i):
-    for v in reversed(i.operand_stack):
-        i.print(v.__ps_repr__())
-
-def op_roll(i):
-    # make sure we have enough arguments
-    assert len(i.operand_stack) >= 2, 'operand stack underflow'
-
-    # make sure we have at least as many stack elements as the first argument
-    # asks for, after removing the arguments
-    assert len(i.operand_stack) - 2 >= i.operand_stack[-2].value, 'operand stack underflow'
-
-    n, j = (v.value for v in i.check_arity(IntegerValue, IntegerValue))
-
-    assert n > 0
-
-    window = deque(list(i.operand_stack)[-n:])
-
-    if j > 0:
-        for _ in range(j):
-            window.appendleft(window.pop())
-    else:
-        for _ in range(-j):
-            window.append(window.popleft())
-
-    for _ in range(n):
-        i.operand_stack.pop()
-    i.operand_stack.extend(window)
-
-@postscript_function
-def op_sub(i, lhs: int, rhs: int):
-    i.operand_stack.append(IntegerValue(
-        value=lhs - rhs,
-    ))
-
-core_vocabulary = {
-    '=':       op_print,
-    'count':   op_count,
-    'def':     op_def,
-    'exec':    op_exec,
-    'for':     op_for,
-    'index':   op_index,
-    'pop':     op_pop,
-    'pstack':  op_pstack,
-    'roll':    op_roll,
-    'sub':     op_sub,
-}
-
 class Interpreter:
     def __init__(self):
         self.operand_stack = deque()
@@ -370,3 +273,100 @@ class Interpreter:
         finally:
             self.execution_stack.pop()
         assert not self._is_building_executable_array() # XXX right?
+
+def postscript_function(fn):
+    print([(p.name, p.annotation) for p in inspect.signature(fn).parameters.values()])
+    expected_types = [ param.annotation for param in inspect.signature(fn).parameters.values() if param.name != 'i' ]
+
+    @functools.wraps(fn)
+    def wrapper(i):
+        args = i.check_arity(*expected_types)
+
+        return fn(i, *args)
+
+    return wrapper
+
+def op_count(i: Interpreter):
+    i.operand_stack.append(IntegerValue(value=len(i.operand_stack)))
+
+def op_def(i: Interpreter):
+    name, value = i.check_arity(NameValue, Value)
+
+    i.dictionary_stack[name.value] = value
+
+@postscript_function
+def op_exec(i: Interpreter, fn: ArrayValue):
+    return fn.execute(i, direct=False)
+
+@postscript_function
+def op_for(i: Interpreter, init: int, incr: int, limit: int, fn: ArrayValue):
+    for j in range(init, limit+1, incr):
+        i.operand_stack.append(IntegerValue(
+            value=j,
+        ))
+        maybe_gen = fn.execute(i, direct=False)
+        if inspect.isgenerator(maybe_gen):
+            yield from maybe_gen
+
+@postscript_function
+def op_index(i: Interpreter, idx: int):
+    assert idx >= 0
+
+    i.operand_stack.append(i.operand_stack[-1 - idx])
+
+def op_pop(i: Interpreter):
+    assert len(i.operand_stack) > 0, 'operand stack underflow'
+
+    i.operand_stack.pop()
+
+@postscript_function
+def op_print(i: Interpreter, v: Value):
+    i.print(v.__ps_str__())
+
+def op_pstack(i: Interpreter):
+    for v in reversed(i.operand_stack):
+        i.print(v.__ps_repr__())
+
+def op_roll(i: Interpreter):
+    # make sure we have enough arguments
+    assert len(i.operand_stack) >= 2, 'operand stack underflow'
+
+    # make sure we have at least as many stack elements as the first argument
+    # asks for, after removing the arguments
+    assert len(i.operand_stack) - 2 >= i.operand_stack[-2].value, 'operand stack underflow'
+
+    n, j = (v.value for v in i.check_arity(IntegerValue, IntegerValue))
+
+    assert n > 0
+
+    window = deque(list(i.operand_stack)[-n:])
+
+    if j > 0:
+        for _ in range(j):
+            window.appendleft(window.pop())
+    else:
+        for _ in range(-j):
+            window.append(window.popleft())
+
+    for _ in range(n):
+        i.operand_stack.pop()
+    i.operand_stack.extend(window)
+
+@postscript_function
+def op_sub(i: Interpreter, lhs: int, rhs: int):
+    i.operand_stack.append(IntegerValue(
+        value=lhs - rhs,
+    ))
+
+core_vocabulary = {
+    '=':       op_print,
+    'count':   op_count,
+    'def':     op_def,
+    'exec':    op_exec,
+    'for':     op_for,
+    'index':   op_index,
+    'pop':     op_pop,
+    'pstack':  op_pstack,
+    'roll':    op_roll,
+    'sub':     op_sub,
+}
