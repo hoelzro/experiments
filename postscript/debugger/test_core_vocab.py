@@ -37,3 +37,8 @@ def test_index():
     program = '1 2 3 2 index'
     values = run_and_gather_stack(program)
     assert values == [1, 2, 3, 1]
+
+def test_for():
+    program = '1 1 4 { 1 sub } for'
+    values = run_and_gather_stack(program)
+    assert values == [0, 1, 2, 3]
