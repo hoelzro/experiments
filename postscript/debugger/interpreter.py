@@ -1,5 +1,6 @@
 from collections import deque, ChainMap
 from dataclasses import dataclass
+import functools
 import inspect
 
 from typing import Optional, Self
@@ -282,12 +283,23 @@ def op_roll(i):
         i.operand_stack.pop()
     i.operand_stack.extend(window)
 
-def op_sub(i):
-    lhs, rhs = i.check_arity(IntegerValue, IntegerValue)
-
+def op_sub(i, lhs: IntegerValue, rhs: IntegerValue):
     i.operand_stack.append(IntegerValue(
         value=lhs.value - rhs.value,
     ))
+
+# XXX rename me
+def special_wrapper(fn):
+    # XXX the name != 'i' check is not ideal :(
+    expected_types = [ param.annotation for param in inspect.signature(fn).parameters.values() if param.name != 'i' ]
+
+    @functools.wraps(fn)
+    def wrapper(i):
+        args = i.check_arity(*expected_types)
+
+        return fn(i, *args)
+
+    return wrapper
 
 core_vocabulary = {
     '=':       op_print,
@@ -299,7 +311,7 @@ core_vocabulary = {
     'pop':     op_pop,
     'pstack':  op_pstack,
     'roll':    op_roll,
-    'sub':     op_sub,
+    'sub':     special_wrapper(op_sub),
 }
 
 class Interpreter:
