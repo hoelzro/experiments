@@ -217,6 +217,18 @@ class Scanner:
                 else:
                     raise NotImplementedError(f"can't handle rest of line {line!r}")
 
+def postscript_function(fn):
+    # XXX the name != 'i' check is not ideal :(
+    expected_types = [ param.annotation for param in inspect.signature(fn).parameters.values() if param.name != 'i' ]
+
+    @functools.wraps(fn)
+    def wrapper(i):
+        args = i.check_arity(*expected_types)
+
+        return fn(i, *args)
+
+    return wrapper
+
 def op_count(i):
     i.operand_stack.append(IntegerValue(value=len(i.operand_stack)))
 
@@ -287,23 +299,11 @@ def op_roll(i):
         i.operand_stack.pop()
     i.operand_stack.extend(window)
 
+@postscript_function
 def op_sub(i, lhs: int, rhs: int):
     i.operand_stack.append(IntegerValue(
         value=lhs - rhs,
     ))
-
-# XXX rename me
-def special_wrapper(fn):
-    # XXX the name != 'i' check is not ideal :(
-    expected_types = [ param.annotation for param in inspect.signature(fn).parameters.values() if param.name != 'i' ]
-
-    @functools.wraps(fn)
-    def wrapper(i):
-        args = i.check_arity(*expected_types)
-
-        return fn(i, *args)
-
-    return wrapper
 
 core_vocabulary = {
     '=':       op_print,
@@ -315,7 +315,7 @@ core_vocabulary = {
     'pop':     op_pop,
     'pstack':  op_pstack,
     'roll':    op_roll,
-    'sub':     special_wrapper(op_sub),
+    'sub':     op_sub,
 }
 
 class Interpreter:
