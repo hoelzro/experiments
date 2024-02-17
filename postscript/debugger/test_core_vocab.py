@@ -47,3 +47,8 @@ def test_exec():
     program = '{ 3 } exec'
     values = run_and_gather_stack(program)
     assert values == [3]
+
+def test_def():
+    program = '/pushthree { 3 } def pushthree'
+    values = run_and_gather_stack(program)
+    assert values == [3]
