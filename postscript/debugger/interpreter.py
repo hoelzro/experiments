@@ -128,6 +128,10 @@ class StartProcValue(Value):
 class EndProcValue(Value):
     value: any = None
 
+TYPE_MAPPING = {
+    int: IntegerValue,
+}
+
 def print_value(v, indent=0):
     print('  ' * indent, type(v).__name__, end='', sep='')
     if isinstance(v, ArrayValue):
@@ -283,9 +287,9 @@ def op_roll(i):
         i.operand_stack.pop()
     i.operand_stack.extend(window)
 
-def op_sub(i, lhs: IntegerValue, rhs: IntegerValue):
+def op_sub(i, lhs: int, rhs: int):
     i.operand_stack.append(IntegerValue(
-        value=lhs.value - rhs.value,
+        value=lhs - rhs,
     ))
 
 # XXX rename me
@@ -329,9 +333,11 @@ class Interpreter:
     def check_arity(self, *signature):
         assert len(self.operand_stack) >= len(signature), 'operand stack underflow'
         for expected_type, arg in zip(reversed(signature), reversed(self.operand_stack)):
+            if not issubclass(expected_type, Value):
+                expected_type = TYPE_MAPPING[expected_type]
             assert isinstance(arg, expected_type), f'got {type(arg).__name__}, expected {expected_type.__name__}'
 
-        return reversed([ self.operand_stack.pop() for _ in signature ])
+        return reversed([ v if issubclass(expected_type, Value) else v.value for expected_type in signature if (v := self.operand_stack.pop()) ])
 
     def execute(self, program):
         f = Frame(program)
