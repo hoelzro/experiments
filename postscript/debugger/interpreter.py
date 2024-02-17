@@ -242,10 +242,9 @@ def op_exec(i):
 
     return fn.execute(i, direct=False)
 
-def op_for(i):
-    init, incr, limit, fn = i.check_arity(IntegerValue, IntegerValue, IntegerValue, ArrayValue)
-
-    for j in range(init.value, limit.value+1, incr.value):
+@postscript_function
+def op_for(i, init: int, incr: int, limit: int, fn: ArrayValue):
+    for j in range(init, limit+1, incr):
         i.operand_stack.append(IntegerValue(
             value=j,
         ))
