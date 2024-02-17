@@ -130,6 +130,7 @@ class EndProcValue(Value):
 
 TYPE_MAPPING = {
     int: IntegerValue,
+    str: (NameValue, StringValue),
 }
 
 def print_value(v, indent=0):
@@ -289,10 +290,9 @@ def postscript_function(fn):
 def op_count(i: Interpreter):
     i.operand_stack.append(IntegerValue(value=len(i.operand_stack)))
 
-def op_def(i: Interpreter):
-    name, value = i.check_arity(NameValue, Value)
-
-    i.dictionary_stack[name.value] = value
+@postscript_function
+def op_def(i: Interpreter, name: str, value: Value):
+    i.dictionary_stack[name] = value
 
 @postscript_function
 def op_exec(i: Interpreter, fn: ArrayValue):
