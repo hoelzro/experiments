@@ -237,9 +237,8 @@ def op_def(i):
 
     i.dictionary_stack[name.value] = value
 
-def op_exec(i):
-    fn, = i.check_arity(ArrayValue)
-
+@postscript_function
+def op_exec(i, fn: ArrayValue):
     return fn.execute(i, direct=False)
 
 @postscript_function
