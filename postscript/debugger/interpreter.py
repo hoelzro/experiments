@@ -335,7 +335,7 @@ class Interpreter:
                 expected_type = TYPE_MAPPING[expected_type]
             assert isinstance(arg, expected_type), f'got {type(arg).__name__}, expected {expected_type.__name__}'
 
-        return reversed([ v if issubclass(expected_type, Value) else v.value for expected_type in signature if (v := self.operand_stack.pop()) ])
+        return reversed([ v if issubclass(expected_type, Value) else v.value for expected_type in reversed(signature) if (v := self.operand_stack.pop()) ])
 
     def execute(self, program):
         f = Frame(program)
