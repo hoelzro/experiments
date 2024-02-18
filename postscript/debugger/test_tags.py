@@ -45,6 +45,11 @@ def test_executable_array():
     tags = run_and_gather_tags(program)
     assert tags == ['end']
 
+def test_space_provides_no_tag():
+    program = '1 % tag one'
+    tags = run_and_gather_tags(program)
+    assert tags == ['one']
+
 _comment='''
   - if a word is executed and does *not* have a tag…
     - if the stack isn't altered, nothing happens (obviously)
