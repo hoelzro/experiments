@@ -158,7 +158,7 @@ class Scanner:
                 line = line[:idx]
 
                 while len(comment) > 0 and comment[0].isspace():
-                    comment = comment[1:comment]
+                    comment = comment[1:]
 
                 if comment.startswith('tag '):
                     tag = comment.removeprefix('tag ')
