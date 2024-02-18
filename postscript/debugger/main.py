@@ -33,6 +33,9 @@ class SourceCode(Widget):
     def highlight(self, line, col_start, col_end):
         self.highlight_pos = (line, col_start, col_end)
 
+    def unhilight(self):
+        self.highlight_pos = None
+
 class DebuggerApp(App):
     CSS_PATH = 'layout.tcss'
 
@@ -75,10 +78,15 @@ class DebuggerApp(App):
             next_word = next(self.stepper)
         except StopIteration:
             self.log_widget.write_line('\nProgram finished.')
-            return
+            next_word = None
 
-        assert next_word.line is not None, repr(next_word)
-        self.src.highlight(line=next_word.line, col_start=next_word.column, col_end=next_word.column+next_word.length)
+        if next_word is not None:
+            assert next_word.line is not None, repr(next_word)
+            # XXX what if the next_word doesn't have a line property?
+            self.src.highlight(line=next_word.line, col_start=next_word.column, col_end=next_word.column+next_word.length)
+        else:
+            self.src.unhilight()
+
         self.src.refresh()
         stack_widget_lines = reversed([ v.__ps_repr__() + (f' [grey42]{v.tag}[/grey42]' if v.tag is not None else '') for v in self.interp.operand_stack ])
         self.stack_widget.update('\n'.join(stack_widget_lines))
