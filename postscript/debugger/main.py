@@ -92,5 +92,22 @@ class DebuggerApp(App):
         self.stack_widget.update('\n'.join(stack_widget_lines))
 
 if __name__ == '__main__':
-    app = DebuggerApp()
-    app.run()
+    # XXX configure ↓ via flag?
+    mode = 'run'
+
+    match mode:
+        case 'dump_tokens':
+            with open(sys.argv[1], 'r') as f:
+                for w in Scanner(f):
+                    print(w)
+        case 'interactive':
+            app = DebuggerApp()
+            app.run()
+        case 'run':
+            t = Interpreter()
+            t.print = print
+            with open(sys.argv[1], 'r') as f:
+                for _ in t.execute(Scanner(f)):
+                    pass
+        case _:
+            raise Exception(f'invalid mode {mode!r}')
