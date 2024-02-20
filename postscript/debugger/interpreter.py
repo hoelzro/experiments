@@ -276,7 +276,6 @@ class Interpreter:
         assert not self._is_building_executable_array() # XXX right?
 
 def postscript_function(fn):
-    print([(p.name, p.annotation) for p in inspect.signature(fn).parameters.values()])
     expected_types = [ param.annotation for param in inspect.signature(fn).parameters.values() if param.name != 'i' ]
 
     @functools.wraps(fn)
