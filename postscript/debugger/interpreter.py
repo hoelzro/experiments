@@ -141,6 +141,10 @@ class StartProcValue(Value):
 class EndProcValue(Value):
     value: any = None
 
+@dataclass
+class StubValue(Value):
+    value: any = None
+
 TYPE_MAPPING = {
     int: IntegerValue,
     str: (NameValue, StringValue),
@@ -380,22 +384,46 @@ def op_roll(i: Interpreter):
         i.operand_stack.pop()
     i.operand_stack.extend(window)
 
+# XXX return value (XXX would that mess with generators/stepping?)
 @postscript_function
 def op_sub(i: Interpreter, lhs: int, rhs: int):
     i.operand_stack.append(IntegerValue(
         value=lhs - rhs,
     ))
 
+def stub(nargs: int, nret: int = 0):
+    def stub_function(i: Interpreter):
+        for _ in range(nargs):
+            i.operand_stack.pop()
+        for _ in range(nret):
+            i.operand_stack.append(StubValue())
+
+    return stub_function
+
 core_vocabulary = {
-    '=':       op_print,
-    'count':   op_count,
-    'def':     op_def,
-    'exec':    op_exec,
-    'for':     op_for,
-    'index':   op_index,
-    'pop':     op_pop,
-    'pstack':  op_pstack,
-    'ptags':   op_ptags,
-    'roll':    op_roll,
-    'sub':     op_sub,
+    '=':            op_print,
+    'count':        op_count,
+    'currentpoint': stub(0, 2),
+    'def':          op_def,
+    'exec':         op_exec,
+    'findfont':     stub(1, 1),
+    'for':          op_for,
+    'index':        op_index,
+    'lineto':       stub(2),
+    'moveto':       stub(2),
+    'newpath':      stub(0),
+    'pop':          op_pop,
+    'pstack':       op_pstack,
+    'ptags':        op_ptags,
+    'rlineto':      stub(2),
+    'rmoveto':      stub(2),
+    'roll':         op_roll,
+    'scalefont':    stub(2, 1),
+    'setfont':      stub(1),
+    'setlinewidth': stub(1),
+    'setrgbcolor':  stub(3),
+    'show':         stub(1),
+    'showpage':     stub(0),
+    'stroke':       stub(0),
+    'sub':          op_sub,
 }
