@@ -89,6 +89,7 @@ class IntegerValue(Value):
 @dataclass
 class ArrayValue(Value):
     value: list[Value]
+    args: list[str] = None
 
     def execute(self, i, direct):
         if self.executable and not direct:
@@ -119,6 +120,7 @@ class ArrayValue(Value):
 @dataclass
 class StartProcValue(Value):
     value: any = None
+    args: list[str] = None
 
     def execute(self, i, direct):
         # XXX I *think* it should be ok just to push ourselves onto the stack?
@@ -163,7 +165,7 @@ class Scanner:
                 if comment.startswith('tag '):
                     tag = comment.removeprefix('tag ')
                 if comment.startswith('args '):
-                    args = comment.removeprefix('args ')
+                    args = comment.removeprefix('args ').split(' ')
 
             col_no = 1
 
@@ -183,7 +185,7 @@ class Scanner:
                     col_no += idx
                 elif line[0] == '{':
                     assert len(line) == 1 or line[1].isspace()
-                    yield StartProcValue(line=line_no, column=col_no, length=1, tag=tag)
+                    yield StartProcValue(line=line_no, column=col_no, length=1, tag=tag, args=args)
                     line = line[1:]
                     col_no += 1
                 elif line[0] == '}':
@@ -252,17 +254,16 @@ class Interpreter:
                         array = []
                         while not isinstance(self.operand_stack[-1], StartProcValue):
                             array.append(self.operand_stack.pop())
-                        line = self.operand_stack[-1].line
-                        column = self.operand_stack[-1].column
-                        self.operand_stack.pop() # pop the start proc
+                        start_proc_word = self.operand_stack.pop() # pop the start proc
                         array.reverse()
                         self.operand_stack.append(ArrayValue(
                             value=array,
                             executable=True,
-                            line=line,
-                            column=column,
+                            line=start_proc_word.line,
+                            column=start_proc_word.column,
                             length=1,
                             tag=word.tag,
+                            args=start_proc_word.args,
                         ))
                     else:
                         self.operand_stack.append(word)
