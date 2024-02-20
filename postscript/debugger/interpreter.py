@@ -327,6 +327,10 @@ def op_pstack(i: Interpreter):
     for v in reversed(i.operand_stack):
         i.print(v.__ps_repr__())
 
+def op_ptags(i: Interpreter):
+    for v in reversed(i.operand_stack):
+        i.print(str(v.tag))
+
 def op_roll(i: Interpreter):
     # make sure we have enough arguments
     assert len(i.operand_stack) >= 2, 'operand stack underflow'
@@ -367,6 +371,7 @@ core_vocabulary = {
     'index':   op_index,
     'pop':     op_pop,
     'pstack':  op_pstack,
+    'ptags':   op_ptags,
     'roll':    op_roll,
     'sub':     op_sub,
 }
