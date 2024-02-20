@@ -38,3 +38,20 @@ strcat
         'suffix',
         'prefix',
     ]
+
+def test_restore_tags():
+    program = '''
+/kindapop { %args second first
+  pop
+} def
+
+1 %tag one
+2 %tag two
+kindapop
+ptags
+    '''
+
+    output = run_and_gather_output(program)
+    assert output.splitlines() == [
+        'one',
+    ]
