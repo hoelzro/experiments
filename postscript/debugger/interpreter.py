@@ -155,6 +155,19 @@ def print_value(v, indent=0):
     else:
         print('', v.value)
 
+DELIMITERS = {
+    '(',
+    ')',
+    '<',
+    '>',
+    '[',
+    ']',
+    '{',
+    '}',
+    '/',
+    '%',
+}
+
 class Scanner:
     def __init__(self, lines):
         self.lines = lines
@@ -189,7 +202,7 @@ class Scanner:
 
                 if line.startswith('/'):
                     idx = 1
-                    while idx < len(line) and line[idx].isalpha():
+                    while idx < len(line) and not line[idx].isspace() and not line[idx] in DELIMITERS:
                         idx += 1
                     yield NameValue(value=line[1:idx], line=line_no, column=col_no, length=idx, tag=tag)
                     line = line[idx:]
