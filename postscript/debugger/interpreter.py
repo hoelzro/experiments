@@ -94,7 +94,18 @@ class ArrayValue(Value):
     def execute(self, i, direct):
         if self.executable and not direct:
             # executing an executable array…executes it
-            return i.execute(self)
+            restore_tags = None
+            try:
+                if self.args:
+                    restore_tags = []
+                    for new_tag, value in zip(reversed(self.args), reversed(i.operand_stack)):
+                        restore_tags.append((value, value.tag))
+                        value.tag = new_tag
+                yield from i.execute(self)
+            finally:
+                if restore_tags:
+                    for v, old_tag in restore_tags:
+                        v.tag = old_tag
         else:
             # executing a literal array just pushes it onto the stack
             # XXX I *think* it should be ok just to push ourselves onto the stack?
