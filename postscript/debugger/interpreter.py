@@ -87,6 +87,13 @@ class IntegerValue(Value):
         i.operand_stack.append(self)
 
 @dataclass
+class RealValue(Value):
+    value: float
+
+    def execute(self, i, direct):
+        i.operand_stack.append(self)
+
+@dataclass
 class ArrayValue(Value):
     value: list[Value]
     args: list[str] = None
@@ -230,9 +237,12 @@ class Scanner:
                     col_no += idx
                 elif (line[0] == '-' and line[1].isdigit()) or line[0].isdigit():
                     idx = 1
-                    while idx < len(line) and line[idx].isdigit():
+                    while idx < len(line) and (line[idx].isdigit() or line[idx] == '.'):
                         idx += 1
-                    yield IntegerValue(value=int(line[:idx]), line=line_no, column=col_no, length=idx, tag=tag)
+                    if '.' in line[:idx]:
+                        yield RealValue(value=float(line[:idx]), line=line_no, column=col_no, length=idx, tag=tag)
+                    else:
+                        yield IntegerValue(value=int(line[:idx]), line=line_no, column=col_no, length=idx, tag=tag)
                     line = line[idx:]
                     col_no += idx
                 elif line[0] == '(':
