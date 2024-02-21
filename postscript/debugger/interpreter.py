@@ -2,7 +2,10 @@ from collections import deque, ChainMap
 from dataclasses import dataclass
 import functools
 import inspect
+import itertools
 
+import types
+import typing
 from typing import Optional, Self
 
 class Frame:
@@ -154,7 +157,8 @@ class StubValue(Value):
 
 TYPE_MAPPING = {
     int: IntegerValue,
-    str: (NameValue, StringValue),
+    float: RealValue,
+    str: NameValue | StringValue,
 }
 
 def print_value(v, indent=0):
@@ -272,12 +276,29 @@ class Interpreter:
 
     def check_arity(self, *signature):
         assert len(self.operand_stack) >= len(signature), 'operand stack underflow'
+        retvals = []
         for expected_type, arg in zip(reversed(signature), reversed(self.operand_stack)):
-            if not issubclass(expected_type, Value):
-                expected_type = TYPE_MAPPING[expected_type]
-            assert isinstance(arg, expected_type), f'got {type(arg).__name__}, expected {expected_type.__name__}'
+            if isinstance(expected_type, types.UnionType):
+                valid_types = typing.get_args(expected_type)
+            else:
+                valid_types = (expected_type,)
 
-        return reversed([ v if issubclass(expected_type, Value) else v.value for expected_type in reversed(signature) if (v := self.operand_stack.pop()) ])
+            unwrap = not any(issubclass(t, Value) for t in valid_types)
+
+            if any(issubclass(t, Value) for t in valid_types):
+                assert all(issubclass(t, Value) for t in valid_types), 'if any of the types are Value subclasses, all of them must be'
+            else:
+                valid_types = tuple(itertools.chain.from_iterable(typing.get_args(TYPE_MAPPING[t]) if isinstance(TYPE_MAPPING[t], types.UnionType) else (TYPE_MAPPING[t],) for t in valid_types))
+
+            assert isinstance(arg, valid_types), f'got {type(arg).__name__}, expected any of {", ".join(t.__name__ for t in valid_types)}'
+            retvals.append(arg.value if unwrap else arg)
+
+        # we didn't want to alter the stack unless everything looks good - now that we know that, we
+        # can pop the values we've gathered
+        for _ in signature:
+            self.operand_stack.pop()
+
+        return reversed(retvals)
 
     def execute(self, program):
         f = Frame(program)
