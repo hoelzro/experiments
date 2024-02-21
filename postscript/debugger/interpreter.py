@@ -161,6 +161,10 @@ class EndProcValue(Value):
 class StubValue(Value):
     value: any = None
 
+@dataclass(eq=False)
+class DictionaryValue(Value):
+    value: dict[Value, Value]
+
 TYPE_MAPPING = {
     int: IntegerValue,
     float: RealValue,
@@ -491,8 +495,26 @@ def stub(nargs: int, nret: int = 0):
 
     return stub_function
 
+def op_mark(i: Interpreter):
+    i.operand_stack.append(MarkValue())
+
+def op_create_dictionary(i: Interpreter):
+    dict_args = []
+    while len(i.operand_stack) > 0 and not isinstance(i.operand_stack[-1], MarkValue):
+        dict_args.append(i.operand_stack.pop())
+    dict_args.reverse()
+
+    # pop the mark
+    i.operand_stack.pop()
+
+    i.operand_stack.append(DictionaryValue(
+        value={ k:v for k, v in zip(dict_args[0::2], dict_args[1::2]) },
+    ))
+
 core_vocabulary = {
+    '<<':           op_mark,
     '=':            op_print,
+    '>>':           op_create_dictionary,
     'add':          op_add,
     'copy':         op_copy,
     'count':        op_count,
