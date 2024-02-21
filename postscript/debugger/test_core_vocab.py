@@ -57,3 +57,8 @@ def test_dup():
     program = '1 2 dup'
     values = run_and_gather_stack(program)
     assert values == [1, 2, 2]
+
+def test_mul():
+    program = '10 8 mul'
+    values = run_and_gather_stack(program)
+    assert values == [80]

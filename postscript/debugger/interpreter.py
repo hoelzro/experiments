@@ -355,6 +355,12 @@ def op_index(i: Interpreter, idx: int):
 
     i.operand_stack.append(i.operand_stack[-1 - idx])
 
+@postscript_function
+def op_mul(i: Interpreter, lhs: int, rhs: int):
+    i.operand_stack.append(IntegerValue(
+        value=lhs * rhs,
+    ))
+
 def op_pop(i: Interpreter):
     assert len(i.operand_stack) > 0, 'operand stack underflow'
 
@@ -425,6 +431,7 @@ core_vocabulary = {
     'index':        op_index,
     'lineto':       stub(2),
     'moveto':       stub(2),
+    'mul':          op_mul,
     'newpath':      stub(0),
     'pop':          op_pop,
     'pstack':       op_pstack,
