@@ -358,6 +358,11 @@ def op_add(i: Interpreter, lhs: int|float, rhs: int|float):
             value=res,
         ))
 
+@postscript_function
+def op_copy(i: Interpreter, n: int):
+    for _ in range(n):
+        i.operand_stack.append(i.operand_stack[-n])
+
 def op_count(i: Interpreter):
     i.operand_stack.append(IntegerValue(value=len(i.operand_stack)))
 
@@ -473,6 +478,7 @@ def stub(nargs: int, nret: int = 0):
 core_vocabulary = {
     '=':            op_print,
     'add':          op_add,
+    'copy':         op_copy,
     'count':        op_count,
     'currentpoint': stub(0, 2),
     'def':          op_def,
