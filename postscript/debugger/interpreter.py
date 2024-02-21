@@ -347,10 +347,16 @@ def postscript_function(fn):
     return wrapper
 
 @postscript_function
-def op_add(i: Interpreter, lhs: int, rhs: int):
-    i.operand_stack.append(IntegerValue(
-        value=lhs + rhs,
-    ))
+def op_add(i: Interpreter, lhs: int|float, rhs: int|float):
+    res = lhs + rhs
+    if isinstance(res, float):
+        i.operand_stack.append(RealValue(
+            value=res,
+        ))
+    else:
+        i.operand_stack.append(IntegerValue(
+            value=res,
+        ))
 
 def op_count(i: Interpreter):
     i.operand_stack.append(IntegerValue(value=len(i.operand_stack)))
@@ -388,10 +394,17 @@ def op_index(i: Interpreter, idx: int):
     i.operand_stack.append(i.operand_stack[-1 - idx])
 
 @postscript_function
-def op_mul(i: Interpreter, lhs: int, rhs: int):
-    i.operand_stack.append(IntegerValue(
-        value=lhs * rhs,
-    ))
+def op_mul(i: Interpreter, lhs: int|float, rhs: int|float):
+    res = lhs * rhs
+
+    if isinstance(res, float):
+        i.operand_stack.append(RealValue(
+            value=res,
+        ))
+    else:
+        i.operand_stack.append(IntegerValue(
+            value=res,
+        ))
 
 def op_pop(i: Interpreter):
     assert len(i.operand_stack) > 0, 'operand stack underflow'
@@ -437,10 +450,16 @@ def op_roll(i: Interpreter):
 
 # XXX return value (XXX would that mess with generators/stepping?)
 @postscript_function
-def op_sub(i: Interpreter, lhs: int, rhs: int):
-    i.operand_stack.append(IntegerValue(
-        value=lhs - rhs,
-    ))
+def op_sub(i: Interpreter, lhs: int|float, rhs: int|float):
+    res = lhs - rhs
+    if isinstance(res, float):
+        i.operand_stack.append(RealValue(
+            value=res,
+        ))
+    else:
+        i.operand_stack.append(IntegerValue(
+            value=res,
+        ))
 
 def stub(nargs: int, nret: int = 0):
     def stub_function(i: Interpreter):

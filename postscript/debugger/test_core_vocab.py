@@ -26,6 +26,11 @@ def test_sub():
     values = run_and_gather_stack(program)
     assert values == [2]
 
+def test_sub_reals():
+    program = '1 0.1 sub'
+    values = run_and_gather_stack(program)
+    assert values == [0.9]
+
 def test_print():
     program = '1 2 ='
 
@@ -63,10 +68,20 @@ def test_mul():
     values = run_and_gather_stack(program)
     assert values == [80]
 
+def test_mul_reals():
+    program = '0.1 8 mul'
+    values = run_and_gather_stack(program)
+    assert values == [0.8]
+
 def test_add():
     program = '10 8 add'
     values = run_and_gather_stack(program)
     assert values == [18]
+
+def test_add_reals():
+    program = '10.2 0.8 add'
+    values = run_and_gather_stack(program)
+    assert values == [11]
 
 def test_exch():
     program = '10 8 exch'
