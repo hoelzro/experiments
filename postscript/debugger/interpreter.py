@@ -165,6 +165,13 @@ class StubValue(Value):
 class DictionaryValue(Value):
     value: dict[Value, Value]
 
+@dataclass(eq=False)
+class BooleanValue(Value):
+    value: bool
+
+    def execute(self, i, direct):
+        i.operand_stack.append(self)
+
 TYPE_MAPPING = {
     int: IntegerValue,
     float: RealValue,
@@ -523,6 +530,7 @@ core_vocabulary = {
     'dup':          op_dup,
     'exch':         op_exch,
     'exec':         op_exec,
+    'false':        BooleanValue(value=False),
     'findfont':     stub(1, 1),
     'for':          op_for,
     'index':        op_index,
@@ -544,4 +552,5 @@ core_vocabulary = {
     'showpage':     stub(0),
     'stroke':       stub(0),
     'sub':          op_sub,
+    'true':         BooleanValue(value=True),
 }
