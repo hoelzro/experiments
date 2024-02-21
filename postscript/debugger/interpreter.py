@@ -342,6 +342,11 @@ def op_dup(i: Interpreter):
     i.operand_stack.append(i.operand_stack[-1])
 
 @postscript_function
+def op_exch(i: Interpreter, lhs: Value, rhs: Value):
+    i.operand_stack.append(rhs)
+    i.operand_stack.append(lhs)
+
+@postscript_function
 def op_exec(i: Interpreter, fn: ArrayValue):
     return fn.execute(i, direct=False)
 
@@ -432,6 +437,7 @@ core_vocabulary = {
     'currentpoint': stub(0, 2),
     'def':          op_def,
     'dup':          op_dup,
+    'exch':         op_exch,
     'exec':         op_exec,
     'findfont':     stub(1, 1),
     'for':          op_for,

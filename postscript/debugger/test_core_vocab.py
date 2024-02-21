@@ -67,3 +67,8 @@ def test_add():
     program = '10 8 add'
     values = run_and_gather_stack(program)
     assert values == [18]
+
+def test_exch():
+    program = '10 8 exch'
+    values = run_and_gather_stack(program)
+    assert values == [8, 10]
