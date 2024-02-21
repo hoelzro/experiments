@@ -15,7 +15,7 @@ class Frame:
     def __init__(self, program):
         self.program = iter(program)
 
-@dataclass
+@dataclass(eq=False)
 class Value:
     value: any # please override this in subclasses
 
@@ -40,7 +40,13 @@ class Value:
         # XXX improve me!
         return str(self.value)
 
-@dataclass
+    def __eq__(self, other):
+        return type(self) == type(other) and self.value == other.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+@dataclass(eq=False)
 class MarkValue(Value):
     value: any = None
     def execute(self, i, direct):
@@ -53,7 +59,7 @@ class MarkValue(Value):
     def __ps_repr__(self):
         return '-mark-'
 
-@dataclass
+@dataclass(eq=False)
 class NameValue(Value):
     value: str
 
@@ -72,7 +78,7 @@ class NameValue(Value):
             # XXX I *think* it should be ok just to push ourselves onto the stack?
             i.operand_stack.append(self)
 
-@dataclass
+@dataclass(eq=False)
 class StringValue(Value):
     value: str
 
@@ -82,21 +88,21 @@ class StringValue(Value):
     def __ps_repr__(self):
         return '(' + self.value + ')'
 
-@dataclass
+@dataclass(eq=False)
 class IntegerValue(Value):
     value: int
 
     def execute(self, i, direct):
         i.operand_stack.append(self)
 
-@dataclass
+@dataclass(eq=False)
 class RealValue(Value):
     value: float
 
     def execute(self, i, direct):
         i.operand_stack.append(self)
 
-@dataclass
+@dataclass(eq=False)
 class ArrayValue(Value):
     value: list[Value]
     args: list[str] = None
@@ -138,7 +144,7 @@ class ArrayValue(Value):
         return ' '.join(pieces)
 
 # XXX these two classes are kinda weird
-@dataclass
+@dataclass(eq=False)
 class StartProcValue(Value):
     value: any = None
     args: list[str] = None
@@ -147,11 +153,11 @@ class StartProcValue(Value):
         # XXX I *think* it should be ok just to push ourselves onto the stack?
         i.operand_stack.append(self)
 
-@dataclass
+@dataclass(eq=False)
 class EndProcValue(Value):
     value: any = None
 
-@dataclass
+@dataclass(eq=False)
 class StubValue(Value):
     value: any = None
 
