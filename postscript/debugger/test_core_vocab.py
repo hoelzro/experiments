@@ -52,3 +52,8 @@ def test_def():
     program = '/pushthree { 3 } def pushthree'
     values = run_and_gather_stack(program)
     assert values == [3]
+
+def test_dup():
+    program = '1 2 dup'
+    values = run_and_gather_stack(program)
+    assert values == [1, 2, 2]

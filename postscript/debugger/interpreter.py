@@ -332,6 +332,9 @@ def op_count(i: Interpreter):
 def op_def(i: Interpreter, name: str, value: Value):
     i.dictionary_stack[name] = value
 
+def op_dup(i: Interpreter):
+    i.operand_stack.append(i.operand_stack[-1])
+
 @postscript_function
 def op_exec(i: Interpreter, fn: ArrayValue):
     return fn.execute(i, direct=False)
@@ -415,6 +418,7 @@ core_vocabulary = {
     'count':        op_count,
     'currentpoint': stub(0, 2),
     'def':          op_def,
+    'dup':          op_dup,
     'exec':         op_exec,
     'findfont':     stub(1, 1),
     'for':          op_for,
