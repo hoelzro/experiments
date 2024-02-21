@@ -62,3 +62,8 @@ def test_mul():
     program = '10 8 mul'
     values = run_and_gather_stack(program)
     assert values == [80]
+
+def test_add():
+    program = '10 8 add'
+    values = run_and_gather_stack(program)
+    assert values == [18]

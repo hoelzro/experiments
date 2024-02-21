@@ -325,6 +325,12 @@ def postscript_function(fn):
 
     return wrapper
 
+@postscript_function
+def op_add(i: Interpreter, lhs: int, rhs: int):
+    i.operand_stack.append(IntegerValue(
+        value=lhs + rhs,
+    ))
+
 def op_count(i: Interpreter):
     i.operand_stack.append(IntegerValue(value=len(i.operand_stack)))
 
@@ -421,6 +427,7 @@ def stub(nargs: int, nret: int = 0):
 
 core_vocabulary = {
     '=':            op_print,
+    'add':          op_add,
     'count':        op_count,
     'currentpoint': stub(0, 2),
     'def':          op_def,
