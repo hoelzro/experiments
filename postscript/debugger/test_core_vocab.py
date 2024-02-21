@@ -92,3 +92,8 @@ def test_copy():
     program = '1 2 3 4 5 2 copy'
     values = run_and_gather_stack(program)
     assert values == [1, 2, 3, 4, 5, 4, 5]
+
+def test_roll():
+    program = '1 2 3 3 2 roll'
+    values = run_and_gather_stack(program)
+    assert values == [2, 3, 1]
