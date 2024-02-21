@@ -19,3 +19,18 @@ def test_scans():
 
         got_values = list(Scanner(io.StringIO(program)))
         assert got_values == [expected_value]
+
+def test_dictionary():
+    got_values = list(Scanner(io.StringIO('<< /south true /west true /east true >>')))
+    expected_values = [
+        NameValue(value='<<', line=1, column=1, length=2, executable=True),
+        NameValue(value='south', line=1, column=4, length=6),
+        NameValue(value='true', line=1, column=11, length=4, executable=True),
+        NameValue(value='west', line=1, column=16, length=5),
+        NameValue(value='true', line=1, column=22, length=4, executable=True),
+        NameValue(value='east', line=1, column=27, length=5),
+        NameValue(value='true', line=1, column=33, length=4, executable=True),
+        NameValue(value='>>', line=1, column=38, length=2, executable=True),
+    ]
+
+    assert got_values == expected_values

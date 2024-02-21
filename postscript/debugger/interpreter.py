@@ -259,6 +259,16 @@ class Scanner:
                     yield NameValue(value='=', line=line_no, column=col_no, length=1, tag=tag, executable=True)
                     line = line[1:]
                     col_no += 1
+                elif line[0:2] == '<<':
+                    assert len(line) == 2 or line[2].isspace()
+                    yield NameValue(value='<<', line=line_no, column=col_no, length=2, tag=tag, executable=True)
+                    line = line[2:]
+                    col_no += 2
+                elif line[0:2] == '>>':
+                    assert len(line) == 2 or line[2].isspace()
+                    yield NameValue(value='>>', line=line_no, column=col_no, length=2, tag=tag, executable=True)
+                    line = line[2:]
+                    col_no += 2
                 else:
                     raise NotImplementedError(f"can't handle rest of line {line!r}")
 
