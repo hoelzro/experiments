@@ -97,3 +97,8 @@ def test_roll():
     program = '1 2 3 3 2 roll'
     values = run_and_gather_stack(program)
     assert values == [2, 3, 1]
+
+def test_known():
+    program = '<< /south true >> /south known'
+    values = run_and_gather_stack(program)
+    assert values == [True]

@@ -426,6 +426,12 @@ def op_index(i: Interpreter, idx: int):
     i.operand_stack.append(i.operand_stack[-1 - idx])
 
 @postscript_function
+def op_known(i: Interpreter, d: Value, key: Value):
+    i.operand_stack.append(BooleanValue(
+        value=key in d.value,
+    ))
+
+@postscript_function
 def op_mul(i: Interpreter, lhs: int|float, rhs: int|float):
     res = lhs * rhs
 
@@ -534,6 +540,7 @@ core_vocabulary = {
     'findfont':     stub(1, 1),
     'for':          op_for,
     'index':        op_index,
+    'known':        op_known,
     'lineto':       stub(2),
     'moveto':       stub(2),
     'mul':          op_mul,
