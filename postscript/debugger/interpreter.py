@@ -436,7 +436,7 @@ def op_roll(i: Interpreter):
     # asks for, after removing the arguments
     assert len(i.operand_stack) - 2 >= i.operand_stack[-2].value, 'operand stack underflow'
 
-    n, j = (v.value for v in i.check_arity(IntegerValue, IntegerValue))
+    n, j = i.check_arity(int, int)
 
     assert n > 0
 
