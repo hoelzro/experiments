@@ -1,11 +1,14 @@
 import io
 
-from .interpreter import IntegerValue, NameValue
+from .interpreter import IntegerValue, NameValue, RealValue
 from .interpreter import Scanner
 
 EXAMPLES = [
     ('/foo', NameValue(value='foo')),
     ('17', IntegerValue(value=17)),
+    ('0.16', RealValue(value=0.16)),
+    ('/push3', NameValue(value='push3')),
+    ('/Times-Roman', NameValue(value='Times-Roman')),
 ]
 
 def test_scans():
