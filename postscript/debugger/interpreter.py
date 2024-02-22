@@ -173,6 +173,7 @@ class BooleanValue(Value):
         i.operand_stack.append(self)
 
 TYPE_MAPPING = {
+    bool: BooleanValue,
     int: IntegerValue,
     float: RealValue,
     str: NameValue | StringValue,
@@ -420,6 +421,13 @@ def op_for(i: Interpreter, init: int, incr: int, limit: int, fn: ArrayValue):
             yield from maybe_gen
 
 @postscript_function
+def op_ifelse(i: Interpreter, cond: bool, proc_true: Value, proc_false: Value):
+    if cond:
+        return proc_true.execute(i, direct=False)
+    else:
+        return proc_false.execute(i, direct=False)
+
+@postscript_function
 def op_index(i: Interpreter, idx: int):
     assert idx >= 0
 
@@ -539,6 +547,7 @@ core_vocabulary = {
     'false':        BooleanValue(value=False),
     'findfont':     stub(1, 1),
     'for':          op_for,
+    'ifelse':       op_ifelse,
     'index':        op_index,
     'known':        op_known,
     'lineto':       stub(2),

@@ -102,3 +102,12 @@ def test_known():
     program = '<< /south true >> /south known'
     values = run_and_gather_stack(program)
     assert values == [True]
+
+def test_ifelse():
+    program = 'true { (true) } { (false) } ifelse'
+    values = run_and_gather_stack(program)
+    assert values == ['true']
+
+    program = 'false { (true) } { (false) } ifelse'
+    values = run_and_gather_stack(program)
+    assert values == ['false']
