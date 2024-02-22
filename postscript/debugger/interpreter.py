@@ -78,6 +78,9 @@ class NameValue(Value):
             # XXX I *think* it should be ok just to push ourselves onto the stack?
             i.operand_stack.append(self)
 
+    def __ps_repr__(self):
+        return '/' + self.value
+
 @dataclass(eq=False)
 class StringValue(Value):
     value: str
