@@ -421,6 +421,10 @@ def op_for(i: Interpreter, init: int, incr: int, limit: int, fn: ArrayValue):
             yield from maybe_gen
 
 @postscript_function
+def op_get(i: Interpreter, d: Value, key: Value):
+    i.operand_stack.append(d.value[key])
+
+@postscript_function
 def op_ifelse(i: Interpreter, cond: bool, proc_true: Value, proc_false: Value):
     if cond:
         return proc_true.execute(i, direct=False)
@@ -547,6 +551,7 @@ core_vocabulary = {
     'false':        BooleanValue(value=False),
     'findfont':     stub(1, 1),
     'for':          op_for,
+    'get':          op_get,
     'ifelse':       op_ifelse,
     'index':        op_index,
     'known':        op_known,

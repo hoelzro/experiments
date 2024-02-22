@@ -111,3 +111,8 @@ def test_ifelse():
     program = 'false { (true) } { (false) } ifelse'
     values = run_and_gather_stack(program)
     assert values == ['false']
+
+def test_get():
+    program = '<< /south (South) >> /south get'
+    values = run_and_gather_stack(program)
+    assert values == ['South']
