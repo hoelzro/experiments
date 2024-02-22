@@ -8,6 +8,18 @@ Screen {
   border: solid green;
 }
 
+.stack_widget {
+  height: 1fr;
+  width: 1fr;
+  border: solid green;
+}
+
+.graphics_state_widget {
+  height: 5;
+  width: 1fr;
+  border: solid green;
+}
+
 .output_pane {
   height: 40%;
   width: 1fr;

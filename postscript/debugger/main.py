@@ -84,9 +84,14 @@ class DebuggerApp(App):
                 self.src.border_title = 'Code'
                 yield self.src
 
-                self.stack_widget = Static('', classes='box')
-                self.stack_widget.border_title = 'Stack'
-                yield self.stack_widget
+                with Vertical():
+                    self.stack_widget = Static('', classes='stack_widget')
+                    self.stack_widget.border_title = 'Stack'
+                    yield self.stack_widget
+
+                    self.graphics_state_widget = Static('', classes='graphics_state_widget')
+                    self.graphics_state_widget.border_title = 'Graphics State'
+                    yield self.graphics_state_widget
             yield self.log_widget
         yield Footer()
 
@@ -111,6 +116,7 @@ class DebuggerApp(App):
         self.src.refresh()
         stack_widget_lines = reversed([ v.__ps_repr__() + (f' [grey42]{v.tag}[/grey42]' if v.tag is not None else '') for v in self.interp.operand_stack ])
         self.stack_widget.update('\n'.join(stack_widget_lines))
+        self.graphics_state_widget.update(self.interp._describe_graphics_state())
 
 if __name__ == '__main__':
     # XXX configure ↓ via flag?
