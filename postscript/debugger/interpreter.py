@@ -161,6 +161,12 @@ class EndProcValue(Value):
 class StubValue(Value):
     value: any = None
 
+    def __ps_str__(self):
+        return '-stub-'
+
+    def __ps_repr__(self):
+        return '-stub-'
+
 @dataclass(eq=False)
 class DictionaryValue(Value):
     value: dict[Value, Value]
