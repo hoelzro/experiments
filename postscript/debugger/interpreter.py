@@ -165,6 +165,12 @@ class StubValue(Value):
 class DictionaryValue(Value):
     value: dict[Value, Value]
 
+    def __ps_str__(self):
+        return '-dict-'
+
+    def __ps_repr__(self):
+        return '<< ' + ' '.join(k.__ps_repr__() + ' ' + v.__ps_repr__() for k, v in self.value.items()) + ' >>'
+
 @dataclass(eq=False)
 class BooleanValue(Value):
     value: bool
