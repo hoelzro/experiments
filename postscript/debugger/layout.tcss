@@ -1,0 +1,15 @@
+Screen {
+  layout: horizontal;
+}
+
+.box {
+  height: 100%;
+  width: 1fr;
+  border: solid green;
+}
+
+.output_pane {
+  height: 40%;
+  width: 1fr;
+  border: solid green;
+}
