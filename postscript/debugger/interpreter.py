@@ -316,6 +316,15 @@ class Interpreter:
         self.operand_stack = deque()
         self.execution_stack = deque()
         self.dictionary_stack = ChainMap(core_vocabulary)
+        self.graphics_state = None
+
+    def _describe_graphics_state(self):
+        if self.graphics_state is None:
+            return '(no path)'
+        elif self.graphics_state[0] is None:
+            return '(no current point)'
+        else:
+            return f'({self.graphics_state[0]}, {self.graphics_state[1]})'
 
     def _is_building_executable_array(self):
         return any(isinstance(v, StartProcValue) for v in self.operand_stack)
@@ -557,6 +566,37 @@ def op_create_dictionary(i: Interpreter):
         value={ k:v for k, v in zip(dict_args[0::2], dict_args[1::2]) },
     ))
 
+def op_currentpoint(i: Interpreter):
+    assert i.graphics_state is not None and i.graphics_state[0] is not None, 'no current point'
+
+    i.operand_stack.append(IntegerValue(
+        value=i.graphics_state[0],
+    ))
+
+    i.operand_stack.append(IntegerValue(
+        value=i.graphics_state[1],
+    ))
+
+@postscript_function
+def op_moveto(i: Interpreter, x: int, y: int):
+    assert i.graphics_state is not None, 'no current path'
+    i.graphics_state = (x, y)
+
+@postscript_function
+def op_rmoveto(i: Interpreter, dx: int, dy: int):
+    assert i.graphics_state is not None, 'no current path'
+    assert i.graphics_state[0] is not None, 'no current point'
+
+    x, y = i.graphics_state
+    i.graphics_state = (x + dx, y + dy)
+
+def op_newpath(i: Interpreter):
+    i.graphics_state = (None, None)
+
+def op_stroke(i: Interpreter):
+    assert i.graphics_state is not None, 'no current path'
+    i.graphics_state = None
+
 core_vocabulary = {
     '<<':           op_mark,
     '=':            op_print,
@@ -564,7 +604,7 @@ core_vocabulary = {
     'add':          op_add,
     'copy':         op_copy,
     'count':        op_count,
-    'currentpoint': stub(0, 2),
+    'currentpoint': op_currentpoint,
     'def':          op_def,
     'dup':          op_dup,
     'exch':         op_exch,
@@ -576,15 +616,15 @@ core_vocabulary = {
     'ifelse':       op_ifelse,
     'index':        op_index,
     'known':        op_known,
-    'lineto':       stub(2),
-    'moveto':       stub(2),
+    'lineto':       op_moveto,
+    'moveto':       op_moveto,
     'mul':          op_mul,
-    'newpath':      stub(0),
+    'newpath':      op_newpath,
     'pop':          op_pop,
     'pstack':       op_pstack,
     'ptags':        op_ptags,
-    'rlineto':      stub(2),
-    'rmoveto':      stub(2),
+    'rlineto':      op_rmoveto,
+    'rmoveto':      op_rmoveto,
     'roll':         op_roll,
     'scalefont':    stub(2, 1),
     'setfont':      stub(1),
@@ -592,7 +632,7 @@ core_vocabulary = {
     'setrgbcolor':  stub(3),
     'show':         stub(1),
     'showpage':     stub(0),
-    'stroke':       stub(0),
+    'stroke':       op_stroke,
     'sub':          op_sub,
     'true':         BooleanValue(value=True),
 }
