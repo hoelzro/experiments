@@ -1,9 +1,12 @@
 import io
 import sys
 
+from rich.segment import Segment
+from rich.style import Style
 from textual.app import App
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.strip import Strip
 from textual.widget import Widget
 from textual.widgets import Footer, Log, Static, TextArea
 
@@ -12,23 +15,25 @@ from interpreter import Interpreter, Scanner
 class SourceCode(Widget):
     def __init__(self, text, **kwargs):
         super().__init__(**kwargs)
-        self.text = text
+        self.lines = text.splitlines()
         self.highlight_pos = None
 
-    def render(self):
-        lines = self.text.splitlines()
-        if self.highlight_pos is not None:
-            line_no, col_start, col_end = self.highlight_pos
-            line = lines[line_no - 1]
-            lines[line_no - 1] = ''.join([
-                line[:col_start-1],
-                '[r]',
-                line[col_start-1:col_end-1],
-                '[/r]',
-                line[col_end-1:],
-            ])
+    def render_line(self, y: int) -> Strip:
+        if y >= len(self.lines):
+            return Strip.blank(max(len(line) for line in self.lines))
 
-        return '\n'.join(lines)
+        target_line = self.lines[y]
+
+        match self.highlight_pos:
+            case (line_no, col_start, col_end):
+                if (line_no - 1) == y:
+                    segments = [Segment(target_line[:col_start-1]), Segment(target_line[col_start-1:col_end-1], Style(reverse=True)), Segment(target_line[col_end-1:])]
+                else:
+                    segments = [Segment(target_line)]
+            case None:
+                segments = [Segment(target_line)]
+
+        return Strip(segments)
 
     def highlight(self, line, col_start, col_end):
         self.highlight_pos = (line, col_start, col_end)
