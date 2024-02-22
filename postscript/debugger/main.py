@@ -47,6 +47,15 @@ class SourceCode(ScrollView):
     def unhilight(self):
         self.highlight_pos = None
 
+    def scroll_into_view(self, line, column):
+        line -= 1
+        column -= 1
+
+        if self.scroll_offset.y <= line <= (self.size.height + self.scroll_offset.y):
+            return
+
+        self.scroll_to(y=line)
+
 class DebuggerApp(App):
     CSS_PATH = 'layout.tcss'
 
@@ -95,6 +104,7 @@ class DebuggerApp(App):
             assert next_word.line is not None, repr(next_word)
             # XXX what if the next_word doesn't have a line property?
             self.src.highlight(line=next_word.line, col_start=next_word.column, col_end=next_word.column+next_word.length)
+            self.src.scroll_into_view(next_word.line, next_word.column)
         else:
             self.src.unhilight()
 
