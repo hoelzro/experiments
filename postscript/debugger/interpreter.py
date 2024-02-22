@@ -178,6 +178,12 @@ class BooleanValue(Value):
     def execute(self, i, direct):
         i.operand_stack.append(self)
 
+    def __ps_str__(self):
+        return 'true' if self.value else 'false'
+
+    def __ps_repr__(self):
+        return self.__ps_str__()
+
 TYPE_MAPPING = {
     bool: BooleanValue,
     int: IntegerValue,
