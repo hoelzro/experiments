@@ -6,34 +6,40 @@ from rich.style import Style
 from textual.app import App
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.geometry import Size
+from textual.scroll_view import ScrollView
 from textual.strip import Strip
-from textual.widget import Widget
-from textual.widgets import Footer, Log, Static, TextArea
+from textual.widgets import Footer, Log, Static
 
 from interpreter import Interpreter, Scanner
 
-class SourceCode(Widget):
+class SourceCode(ScrollView):
     def __init__(self, text, **kwargs):
         super().__init__(**kwargs)
         self.lines = text.splitlines()
+        self.virtual_size = Size(max(len(line) for line in self.lines), len(self.lines))
         self.highlight_pos = None
 
     def render_line(self, y: int) -> Strip:
-        if y >= len(self.lines):
-            return Strip.blank(max(len(line) for line in self.lines))
+        scroll_x, scroll_y = self.scroll_offset
+        idx = scroll_y + y
+        if idx >= len(self.lines):
+            return Strip.blank(self.virtual_size.width)
 
-        target_line = self.lines[y]
+        target_line = self.lines[idx]
 
         match self.highlight_pos:
             case (line_no, col_start, col_end):
-                if (line_no - 1) == y:
+                if (line_no - 1) == idx:
                     segments = [Segment(target_line[:col_start-1]), Segment(target_line[col_start-1:col_end-1], Style(reverse=True)), Segment(target_line[col_end-1:])]
                 else:
                     segments = [Segment(target_line)]
             case None:
                 segments = [Segment(target_line)]
 
-        return Strip(segments)
+        strip = Strip(segments)
+        strip.crop(scroll_x, scroll_x + self.size.width)
+        return strip
 
     def highlight(self, line, col_start, col_end):
         self.highlight_pos = (line, col_start, col_end)
