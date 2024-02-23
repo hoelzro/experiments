@@ -1,3 +1,4 @@
+import dataclasses
 import io
 
 from .interpreter import IntegerValue, NameValue, RealValue
@@ -18,7 +19,7 @@ def test_scans():
         expected_value.length = len(program)
 
         got_values = list(Scanner(io.StringIO(program)))
-        assert got_values == [expected_value]
+        assert [ dataclasses.asdict(v) for v in got_values ] == [ dataclasses.asdict(expected_value) ]
 
 def test_dictionary():
     got_values = list(Scanner(io.StringIO('<< /south true /west true /east true >>')))
@@ -33,7 +34,7 @@ def test_dictionary():
         NameValue(value='>>', line=1, column=38, length=2, executable=True),
     ]
 
-    assert got_values == expected_values
+    assert [ dataclasses.asdict(v) for v in got_values ] == [ dataclasses.asdict(v) for v in expected_values ]
 
 def test_array():
     got_values = list(Scanner(io.StringIO('[ /foo 17 ]')))
@@ -44,4 +45,4 @@ def test_array():
         NameValue(value=']', line=1, column=11, length=1, executable=True),
     ]
 
-    assert got_values == expected_values
+    assert [ dataclasses.asdict(v) for v in got_values ] == [ dataclasses.asdict(v) for v in expected_values ]
