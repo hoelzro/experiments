@@ -64,11 +64,15 @@ class DebuggerApp(App):
         ('q', 'quit()', 'Quit'),
     ]
 
+    def __init__(self, source_filename, **kwargs):
+        super().__init__(**kwargs)
+        self.source_filename = source_filename
+
     def compose(self):
         # XXX is this the right place to put this?
         self.interp = Interpreter()
 
-        with open(sys.argv[1], 'r') as f:
+        with open(self.source_filename, 'r') as f:
             source_code = f.read()
         self.stepper = self.interp.execute(Scanner(io.StringIO(source_code)))
 
@@ -119,21 +123,33 @@ class DebuggerApp(App):
         self.graphics_state_widget.update(self.interp._describe_graphics_state())
 
 if __name__ == '__main__':
-    # XXX configure ↓ via flag?
     mode = 'run'
+    source_filename = None
+
+    for arg in sys.argv[1:]:
+        if arg == '--tokens':
+            mode = 'dump_tokens'
+        elif arg == '--interactive':
+            mode = 'interactive'
+        elif arg == '--run':
+            mode = 'run'
+        elif arg.startswith('-'):
+            raise Exception(f'unrecognized flag {arg!r}')
+        else:
+            source_filename = arg
 
     match mode:
         case 'dump_tokens':
-            with open(sys.argv[1], 'r') as f:
+            with open(source_filename, 'r') as f:
                 for w in Scanner(f):
                     print(w)
         case 'interactive':
-            app = DebuggerApp()
+            app = DebuggerApp(source_filename)
             app.run()
         case 'run':
             t = Interpreter()
             t.print = print
-            with open(sys.argv[1], 'r') as f:
+            with open(source_filename, 'r') as f:
                 for _ in t.execute(Scanner(f)):
                     pass
         case _:
