@@ -122,3 +122,8 @@ def test_array():
     values = run_and_gather_stack(program)
     values = [ v.value for v in values[0] ]
     assert values == ['foo', 17]
+
+def test_eq():
+    program = '1 1 add 2 eq'
+    values = run_and_gather_stack(program)
+    assert values == [True]

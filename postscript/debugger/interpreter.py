@@ -620,6 +620,12 @@ def op_stroke(i: Interpreter):
     assert i.graphics_state is not None, 'no current path'
     i.graphics_state = None
 
+@postscript_function
+def op_eq(i: Interpreter, lhs: Value, rhs: Value):
+    i.operand_stack.append(BooleanValue(
+        value=lhs.value == rhs.value,
+    ))
+
 core_vocabulary = {
     '<<':           op_mark,
     '=':            op_print,
@@ -632,6 +638,7 @@ core_vocabulary = {
     'currentpoint': op_currentpoint,
     'def':          op_def,
     'dup':          op_dup,
+    'eq':           op_eq,
     'exch':         op_exch,
     'exec':         op_exec,
     'false':        BooleanValue(value=False),
