@@ -127,3 +127,12 @@ def test_eq():
     program = '1 1 add 2 eq'
     values = run_and_gather_stack(program)
     assert values == [True]
+
+def test_if():
+    program = 'true { (true) } if'
+    values = run_and_gather_stack(program)
+    assert values == ['true']
+
+    program = 'false { (true) } if'
+    values = run_and_gather_stack(program)
+    assert values == []

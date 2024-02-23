@@ -472,6 +472,11 @@ def op_ifelse(i: Interpreter, cond: bool, proc_true: Value, proc_false: Value):
         return proc_false.execute(i, direct=False)
 
 @postscript_function
+def op_if(i: Interpreter, cond: bool, proc_true: Value):
+    if cond:
+        return proc_true.execute(i, direct=False)
+
+@postscript_function
 def op_index(i: Interpreter, idx: int):
     assert idx >= 0
 
@@ -645,6 +650,7 @@ core_vocabulary = {
     'findfont':     stub(1, 1),
     'for':          op_for,
     'get':          op_get,
+    'if':           op_if,
     'ifelse':       op_ifelse,
     'index':        op_index,
     'known':        op_known,
