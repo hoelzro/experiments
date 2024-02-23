@@ -116,3 +116,9 @@ def test_get():
     program = '<< /south (South) >> /south get'
     values = run_and_gather_stack(program)
     assert values == ['South']
+
+def test_array():
+    program = '[ /foo 17 ]'
+    values = run_and_gather_stack(program)
+    values = [ v.value for v in values[0] ]
+    assert values == ['foo', 17]

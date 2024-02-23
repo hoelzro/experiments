@@ -34,3 +34,14 @@ def test_dictionary():
     ]
 
     assert got_values == expected_values
+
+def test_array():
+    got_values = list(Scanner(io.StringIO('[ /foo 17 ]')))
+    expected_values = [
+        NameValue(value='[', line=1, column=1, length=1, executable=True),
+        NameValue(value='foo', line=1, column=3, length=4),
+        IntegerValue(value=17, line=1, column=8, length=2),
+        NameValue(value=']', line=1, column=11, length=1, executable=True),
+    ]
+
+    assert got_values == expected_values

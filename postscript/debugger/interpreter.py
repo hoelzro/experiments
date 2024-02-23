@@ -308,6 +308,16 @@ class Scanner:
                     yield NameValue(value='>>', line=line_no, column=col_no, length=2, tag=tag, executable=True)
                     line = line[2:]
                     col_no += 2
+                elif line[0] == '[':
+                    assert len(line) == 1 or line[1].isspace()
+                    yield NameValue(value='[', line=line_no, column=col_no, length=1, tag=tag, executable=True)
+                    line = line[1:]
+                    col_no += 1
+                elif line[0] == ']':
+                    assert len(line) == 1 or line[1].isspace()
+                    yield NameValue(value=']', line=line_no, column=col_no, length=1, tag=tag, executable=True)
+                    line = line[1:]
+                    col_no += 1
                 else:
                     raise NotImplementedError(f"can't handle rest of line {line!r}")
 
@@ -566,6 +576,19 @@ def op_create_dictionary(i: Interpreter):
         value={ k:v for k, v in zip(dict_args[0::2], dict_args[1::2]) },
     ))
 
+def op_create_array(i: Interpreter):
+    values = []
+    while len(i.operand_stack) > 0 and not isinstance(i.operand_stack[-1], MarkValue):
+        values.append(i.operand_stack.pop())
+    values.reverse()
+
+    # pop the mark
+    i.operand_stack.pop()
+
+    i.operand_stack.append(ArrayValue(
+        value=values,
+    ))
+
 def op_currentpoint(i: Interpreter):
     assert i.graphics_state is not None and i.graphics_state[0] is not None, 'no current point'
 
@@ -601,6 +624,8 @@ core_vocabulary = {
     '<<':           op_mark,
     '=':            op_print,
     '>>':           op_create_dictionary,
+    '[':            op_mark,
+    ']':            op_create_array,
     'add':          op_add,
     'copy':         op_copy,
     'count':        op_count,
