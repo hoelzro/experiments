@@ -7,15 +7,18 @@ pub type Puzzle = List(List(Int))
 
 pub fn format_puzzle_row(row: List(Int)) -> String {
   string.join(list.map(row, fn(i) {
-    case i {
+    "│" <> case i {
       0 -> " "
       _ -> int.to_string(i)
     }
-  }), "")
+  }), "") <> "│"
 }
 
 pub fn format_puzzle(puzzle: Puzzle) -> String {
-  string.join(list.map(puzzle, format_puzzle_row), "\n")
+  let top_row    = "┌─┬─┬─┬─┬─┬─┬─┬─┬─┐"
+  let middle_row = "├─┼─┼─┼─┼─┼─┼─┼─┼─┤"
+  let bottom_row = "└─┴─┴─┴─┴─┴─┴─┴─┴─┘"
+  top_row <> "\n" <> string.join(list.map(puzzle, format_puzzle_row), "\n" <> middle_row <> "\n") <> "\n" <> bottom_row
 }
 
 pub fn print_puzzle(puzzle: Puzzle) {
