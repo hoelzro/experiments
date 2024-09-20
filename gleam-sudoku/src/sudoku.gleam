@@ -4,6 +4,7 @@ import gleam/io
 import gleam/iterator
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import gleam/pair
 import gleam/set
 import gleam/string
 
@@ -43,11 +44,13 @@ pub fn print_puzzle(puzzle: Puzzle) {
 }
 
 pub fn row_neighbors(row: Int, _col: Int) -> List(#(Int, Int)) {
-  list.map(list.range(0, 8), fn(neighbor_col) { #(row, neighbor_col) })
+  list.range(0, 8)
+  |> list.map(pair.new(row, _))
 }
 
 pub fn col_neighbors(_row: Int, col: Int) -> List(#(Int, Int)) {
-  list.map(list.range(0, 8), fn(neighbor_row) { #(neighbor_row, col) })
+  list.range(0, 8)
+  |> list.map(pair.new(_, col))
 }
 
 pub fn block_neighbors(row: Int, col: Int) -> List(#(Int, Int)) {
@@ -82,72 +85,57 @@ pub fn update_puzzle(
 pub fn solve_puzzle(puzzle: Puzzle) -> Option(Puzzle) {
   // XXX strip out 0s?
   let current_values =
-    dict.from_list(
-      list.flatten(
-        list.index_map(puzzle, fn(row, row_num) {
-          list.index_map(row, fn(value, col_num) {
-            #(#(row_num, col_num), value)
-          })
-        }),
-      ),
-    )
+    list.index_map(puzzle, fn(row, row_num) {
+      list.index_map(row, fn(value, col_num) {
+        #(#(row_num, col_num), value)
+      })
+    })
+    |> list.flatten
+    |> dict.from_list
 
   let possible_values =
-    list.flatten(
       list.index_map(puzzle, fn(row, row_num) {
         list.index_map(row, fn(_cell, col_num) {
-          let neighbors =
+          let neighbor_values =
             list.concat([
               row_neighbors(row_num, col_num),
               col_neighbors(row_num, col_num),
               block_neighbors(row_num, col_num),
             ])
-          // XXX can I partially apply dict.get here?
-          let neighbor_values =
-            list.filter_map(neighbors, fn(n) { dict.get(current_values, n) })
+            |> list.filter_map(dict.get(current_values, _))
+
           let possible_cell_values =
-            set.drop(set.from_list(list.range(1, 9)), neighbor_values)
+            list.range(1, 9)
+            |> set.from_list
+            |> set.drop(neighbor_values)
+
           #(#(row_num, col_num), possible_cell_values)
         })
-      }),
-    )
-
-  let possible_values =
-    list.filter(possible_values, fn(pair) {
-      // XXX this could be !dict.has_key(current_values, pair.0)
-      //     if I strip 0s out of current_values above
-      case dict.get(current_values, pair.0) {
-        // XXX does this ordering matter?
-        Ok(0) -> True
-        Ok(_) -> False
-        Error(_) -> True
-      }
-    })
-
-  let possible_values =
-    list.sort(possible_values, fn(a, b) {
-      // XXX destructuring bind
-      int.compare(set.size(a.1), set.size(b.1))
-    })
+      })
+      |> list.flatten
+      |> list.filter(fn(pair) {
+        // XXX this could be !dict.has_key(current_values, pair.0)
+        //     if I strip 0s out of current_values above
+        case dict.get(current_values, pair.0) {
+          Ok(0) -> True
+          Ok(_) -> False
+          Error(_) -> True
+        }
+      })
+      |> list.sort(fn(a, b) {
+        int.compare(set.size(a.1), set.size(b.1))
+      })
 
   case possible_values {
     [] -> Some(puzzle)
     // XXX verify that it's actually solved!
     [#(#(row, col), cell_values), ..] -> {
       // XXX hopefully this is actually lazy?
-      let lazy_solutions =
-        iterator.filter_map(
-          iterator.from_list(set.to_list(cell_values)),
-          fn(value) {
-            // XXX partial application?
-            option.to_result(
-              solve_puzzle(update_puzzle(puzzle, row, col, value)),
-              False,
-            )
-            // XXX False is a dummy placeholder - unit type?
-          },
-        )
-      option.from_result(iterator.first(lazy_solutions))
+      set.to_list(cell_values)
+      |> iterator.from_list
+      |> iterator.filter_map(fn(value) { option.to_result(solve_puzzle(update_puzzle(puzzle, row, col, value)), False) })
+      |> iterator.first
+      |> option.from_result
     }
   }
 }
