@@ -126,7 +126,7 @@ pub fn solve_puzzle(puzzle: Puzzle) -> Option(Puzzle) {
       // XXX hopefully this is actually lazy?
       set.to_list(cell_values)
       |> iterator.from_list
-      |> iterator.filter_map(fn(value) { option.to_result(solve_puzzle(update_puzzle(puzzle, row, col, value)), False) })
+      |> iterator.filter_map(fn(value) { option.to_result(solve_puzzle(update_puzzle(puzzle, row, col, value)), Nil) })
       |> iterator.first
       |> option.from_result
     }
