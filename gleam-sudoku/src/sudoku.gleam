@@ -9,16 +9,13 @@ import gleam/set
 import gleam/string
 
 pub type Puzzle =
-  List(List(Int))
+  List(List(Option(Int)))
 
-pub fn format_puzzle_row(row: List(Int)) -> String {
+pub fn format_puzzle_row(row: List(Option(Int))) -> String {
   string.join(
     list.map(row, fn(i) {
       "│"
-      <> case i {
-        0 -> " "
-        _ -> int.to_string(i)
-      }
+      <> {option.map(i, int.to_string) |> option.unwrap(" ")}
     }),
     "",
   )
@@ -75,7 +72,7 @@ pub fn update_puzzle(
         list.index_map(row, fn(col, col_num) {
           case col_num == target_col_num {
             False -> col
-            True -> new_value
+            True -> Some(new_value)
           }
         })
     }
@@ -87,7 +84,7 @@ pub fn solve_puzzle(puzzle: Puzzle) -> Option(Puzzle) {
   let current_values =
     list.index_map(puzzle, fn(row, row_num) {
       list.index_map(row, fn(value, col_num) {
-        #(#(row_num, col_num), value)
+        #(#(row_num, col_num), option.unwrap(value, 0))
       })
     })
     |> list.flatten
@@ -152,6 +149,15 @@ pub fn main() {
     [9, 0, 0, 0, 7, 0, 0, 0, 0],
     [0, 0, 2, 4, 0, 0, 0, 3, 1],
   ]
+
+  let puzzle = list.map(puzzle, fn(row) {
+    list.map(row, fn(value) {
+      case value {
+        0 -> None
+        _ -> Some(value)
+      }
+    })
+  })
 
   case solve_puzzle(puzzle) {
     None -> io.println("unable to find solution :(")
