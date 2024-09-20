@@ -1,4 +1,5 @@
 import gleam/dict
+import gleam/function
 import gleam/int
 import gleam/io
 import gleam/iterator
@@ -80,14 +81,17 @@ pub fn update_puzzle(
 }
 
 pub fn solve_puzzle(puzzle: Puzzle) -> Option(Puzzle) {
-  // XXX strip out 0s?
   let current_values =
     list.index_map(puzzle, fn(row, row_num) {
       list.index_map(row, fn(value, col_num) {
-        #(#(row_num, col_num), option.unwrap(value, 0))
+        case value {
+          Some(value) -> Ok(#(#(row_num, col_num), value))
+          None -> Error(Nil)
+        }
       })
     })
     |> list.flatten
+    |> list.filter_map(function.identity)
     |> dict.from_list
 
   let possible_values =
@@ -110,15 +114,7 @@ pub fn solve_puzzle(puzzle: Puzzle) -> Option(Puzzle) {
         })
       })
       |> list.flatten
-      |> list.filter(fn(pair) {
-        // XXX this could be !dict.has_key(current_values, pair.0)
-        //     if I strip 0s out of current_values above
-        case dict.get(current_values, pair.0) {
-          Ok(0) -> True
-          Ok(_) -> False
-          Error(_) -> True
-        }
-      })
+      |> list.filter(fn(pair) { !dict.has_key(current_values, pair.0) })
       |> list.sort(fn(a, b) {
         int.compare(set.size(a.1), set.size(b.1))
       })
