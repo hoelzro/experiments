@@ -1,5 +1,4 @@
 import gleam/dict
-import gleam/function
 import gleam/int
 import gleam/io
 import gleam/iterator
@@ -85,13 +84,10 @@ pub fn update_puzzle(
 pub fn solve_puzzle(puzzle: Puzzle) -> Option(Puzzle) {
   let current_values =
     puzzle_map(puzzle, fn(row_num, col_num, value) {
-      case value {
-        Some(value) -> Ok(#(#(row_num, col_num), value))
-        None -> Error(Nil)
-      }
+      option.map(value, fn(value) { #(#(row_num, col_num), value) })
     })
     |> list.flatten
-    |> list.filter_map(function.identity)
+    |> option.values
     |> dict.from_list
 
   let possible_values =
