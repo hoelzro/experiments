@@ -60,64 +60,62 @@ pub fn block_neighbors(row: Int, col: Int) -> List(#(Int, Int)) {
   list.flat_map(rows, fn(row) { list.map(cols, fn(col) { #(row, col) }) })
 }
 
+pub fn puzzle_map(puzzle: Puzzle, f: fn(Int, Int, Option(Int)) -> result_type) -> List(List(result_type)) {
+  list.index_map(puzzle, fn(row, row_num) {
+    list.index_map(row, fn(value, col_num) {
+      f(row_num, col_num, value)
+    })
+  })
+}
+
 pub fn update_puzzle(
   puzzle: Puzzle,
   target_row_num: Int,
   target_col_num: Int,
   new_value: Int,
 ) -> Puzzle {
-  list.index_map(puzzle, fn(row, row_num) {
-    case row_num == target_row_num {
-      False -> row
-      True ->
-        list.index_map(row, fn(col, col_num) {
-          case col_num == target_col_num {
-            False -> col
-            True -> Some(new_value)
-          }
-        })
+  puzzle_map(puzzle, fn(row_num, col_num, value) {
+    case row_num == target_row_num, col_num == target_col_num {
+      True, True -> Some(new_value)
+      _, _ -> value
     }
   })
 }
 
 pub fn solve_puzzle(puzzle: Puzzle) -> Option(Puzzle) {
   let current_values =
-    list.index_map(puzzle, fn(row, row_num) {
-      list.index_map(row, fn(value, col_num) {
-        case value {
-          Some(value) -> Ok(#(#(row_num, col_num), value))
-          None -> Error(Nil)
-        }
-      })
+    puzzle_map(puzzle, fn(row_num, col_num, value) {
+      case value {
+        Some(value) -> Ok(#(#(row_num, col_num), value))
+        None -> Error(Nil)
+      }
     })
     |> list.flatten
     |> list.filter_map(function.identity)
     |> dict.from_list
 
   let possible_values =
-      list.index_map(puzzle, fn(row, row_num) {
-        list.index_map(row, fn(_cell, col_num) {
-          let neighbor_values =
-            list.concat([
-              row_neighbors(row_num, col_num),
-              col_neighbors(row_num, col_num),
-              block_neighbors(row_num, col_num),
-            ])
-            |> list.filter_map(dict.get(current_values, _))
+    puzzle_map(puzzle, fn(row_num, col_num, _cell) {
+      let neighbor_values =
+        list.concat([
+          row_neighbors(row_num, col_num),
+          col_neighbors(row_num, col_num),
+          block_neighbors(row_num, col_num),
+        ])
+        |> list.filter_map(dict.get(current_values, _))
 
-          let possible_cell_values =
-            list.range(1, 9)
-            |> set.from_list
-            |> set.drop(neighbor_values)
+      let possible_cell_values =
+        list.range(1, 9)
+        |> set.from_list
+        |> set.drop(neighbor_values)
 
-          #(#(row_num, col_num), possible_cell_values)
-        })
-      })
-      |> list.flatten
-      |> list.filter(fn(pair) { !dict.has_key(current_values, pair.0) })
-      |> list.sort(fn(a, b) {
-        int.compare(set.size(a.1), set.size(b.1))
-      })
+      #(#(row_num, col_num), possible_cell_values)
+    })
+    |> list.flatten
+    |> list.filter(fn(pair) { !dict.has_key(current_values, pair.0) })
+    |> list.sort(fn(a, b) {
+      int.compare(set.size(a.1), set.size(b.1))
+    })
 
   case possible_values {
     [] -> Some(puzzle)
